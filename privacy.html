@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self'; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Privacy – Pixel Me In</title>
+    <meta
+      name="description"
+      content="Your photo never leaves your device. How Pixel Me In finds and cuts out your face in the browser, what is saved, and how to delete it."
+    />
+    <meta name="theme-color" content="#1b1f3b" />
+    <meta name="author" content="Madhav Kwatra" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content="Privacy – Pixel Me In" />
+    <meta property="og:site_name" content="Pixel Me In: Save Your RAM" />
+    <meta property="og:image" content="./og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Pixel Me In: Save Your RAM – a pixel-art runner with your own face"
+    />
+    <meta
+      property="og:description"
+      content="Your photo never leaves your device. How Pixel Me In finds and cuts out your face in the browser, what is saved, and how to delete it."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="./og-image.png" />
+    <script type="module" crossorigin src="./assets/pwa-CsBPkp9n.js"></script>
+    <script type="module" crossorigin src="./assets/feedback-CW1Uz77a.js"></script>
+    <script type="module" crossorigin src="./assets/pages-Cq4Bsehh.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/pwa-BGUTSU6i.css">
+  <link rel="manifest" href="./manifest.webmanifest"></head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+  <a class="logo" href="./">Pixel Me In</a>
+  <a class="nav-play header-play" href="./?play">Play</a>
+  <button
+    class="menu-btn"
+    type="button"
+    aria-expanded="false"
+    aria-controls="site-nav"
+    aria-label="Open menu"
+  >
+    <span aria-hidden="true"></span>
+  </button>
+  <nav id="site-nav" aria-label="Main">
+    <a href="./how-to-play.html">How to play</a>
+    <a href="./privacy.html">Privacy</a>
+    <a href="./about.html">About</a>
+    <a class="nav-play" href="./?play">Play</a>
+  </nav>
+</header>
+
+      <main class="prose">
+        <h1>Your photo stays on your device</h1>
+        <p class="lead">
+          There is no server. Your photo is never uploaded. Everything happens inside your browser,
+          on your phone or computer.
+        </p>
+
+        <h2>What happens to your photo</h2>
+        <ol>
+          <li>
+            <strong>You take or pick a photo.</strong> Your browser reads it. Nothing is sent.
+          </li>
+          <li>
+            <strong>Hidden data is removed.</strong> Photos can carry your location, camera and
+            date. We redraw the picture, which throws that away.
+          </li>
+          <li>
+            <strong>Your face is found on your device.</strong> Two small models (MediaPipe, by
+            Google) find your eyes, mouth and jawline, and which pixels are you. They run in your
+            browser and are served from this website, not from Google.
+          </li>
+          <li>
+            <strong>Your head is cut out.</strong> The background and your neck are removed. You can
+            turn this off.
+          </li>
+          <li>
+            <strong>Only a small square is saved:</strong> 256 × 256 pixels of your head, plus where
+            your eyes and mouth are. The full photo is thrown away.
+          </li>
+          <li><strong>Pixel art is made from that square</strong> every time you play.</li>
+        </ol>
+
+        <h2>What is saved, and where</h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">What</th>
+              <th scope="col">Where</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Your 256 × 256 head picture and feature positions</td>
+              <td>This browser only (IndexedDB)</td>
+            </tr>
+            <tr>
+              <td>Your character choices (look, hat, outfit)</td>
+              <td>This browser only (IndexedDB)</td>
+            </tr>
+            <tr>
+              <td>Scores and settings</td>
+              <td>This browser only (localStorage)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          To delete everything: open the game, go to <strong>Settings</strong>, press
+          <strong>Delete my data</strong>. Picking a ready-made character also deletes your saved
+          head.
+        </p>
+
+        <h2>Sharing is your choice</h2>
+        <p>
+          "Save picture" and "Share" make an image on your device and hand it to your downloads or
+          your phone's share menu. The game itself never sends it anywhere.
+        </p>
+
+        <h2>How we make sure</h2>
+        <ul>
+          <li>The website is only static files. There is no backend to send a photo to.</li>
+          <li>
+            A browser security rule (<code>connect-src 'self'</code>) blocks any connection to other
+            websites, even by mistake.
+          </li>
+          <li>Automatic tests fail if the page ever talks to another website.</li>
+          <li>No ads, no cookies, no accounts.</li>
+        </ul>
+
+        <h2>Anonymous play stats</h2>
+        <p>
+          To see how the game is used, the site counts visits and a few game steps (for example "run
+          started", "run finished: 250–499 m"). This is what is sent, and what is not:
+        </p>
+        <ul>
+          <li>
+            <strong>Never</strong> your photo, your face, your character, your name or anything you
+            type.
+          </li>
+          <li>
+            <strong>No cookies</strong> and nothing saved in your browser for stats. Visitors are
+            counted with a code that changes every day, so you cannot be followed from day to day.
+          </li>
+          <li>
+            Numbers are rough ranges, not exact scores. The tools are Vercel Web Analytics and
+            PostHog (US servers). Both are reached through this website's own address.
+          </li>
+          <li>
+            <strong>Turn it off</strong> any time: in the game, Settings → "Share anonymous play
+            stats". It is also off when your browser sends "Do Not Track" or "Global Privacy
+            Control".
+          </li>
+        </ul>
+
+        <h2>Check it yourself</h2>
+        <ol>
+          <li>Open the game and your browser's developer tools, then the Network tab.</li>
+          <li>Take or upload a photo and play.</li>
+          <li>Every request goes to this website. No picture goes anywhere else.</li>
+        </ol>
+        <p>
+          The code is open source. The photo pipeline is explained step by step, with links to the
+          code, in
+          <a
+            href="https://github.com/MadhavKwatra/pixel-me-in/blob/main/docs/PRIVACY.md"
+            target="_blank"
+            rel="noopener"
+            ><code>docs/PRIVACY.md</code></a
+          >
+          on GitHub.
+        </p>
+
+        <h2>The character on the home page</h2>
+        <p>
+          That is the maker, Madhav – his own pixel character, shared with his consent. Only the
+          pixel art is published, never his photo. Your character is never published anywhere.
+        </p>
+
+        <h2>Hosting</h2>
+        <p>
+          The host serves the website files and may keep normal server logs (such as IP address and
+          pages visited). It never receives your photo.
+        </p>
+      </main>
+      <footer class="site-footer">
+  <p class="made">
+    Made with <span class="heart" role="img" aria-label="love">♥</span> by
+    <a href="https://madhavkwatra.in" target="_blank" rel="noopener">Madhav</a>
+  </p>
+  <ul class="social" aria-label="Madhav on the web">
+    <li>
+      <a
+        href="https://madhavkwatra.in"
+        target="_blank"
+        rel="noopener"
+        aria-label="Portfolio"
+        title="Portfolio"
+        ><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm7.9 7h-3.4a18 18 0 0 0-1.6-4.4A9.9 9.9 0 0 1 19.9 7ZM12 2.1c.9 1.3 1.7 3 2.2 4.9H9.8c.5-1.9 1.3-3.6 2.2-4.9ZM2.3 14a10 10 0 0 1 0-4h3.9a20 20 0 0 0 0 4H2.3Zm1.8 3h3.4c.4 1.6 1 3.1 1.6 4.4A9.9 9.9 0 0 1 4.1 17Zm3.4-10H4.1a9.9 9.9 0 0 1 5-4.4C8.5 3.9 7.9 5.4 7.5 7ZM12 21.9c-.9-1.3-1.7-3-2.2-4.9h4.4c-.5 1.9-1.3 3.6-2.2 4.9ZM14.6 14H9.4a18 18 0 0 1 0-4h5.2a18 18 0 0 1 0 4Zm.3 7.4c.6-1.3 1.2-2.8 1.6-4.4h3.4a9.9 9.9 0 0 1-5 4.4Zm2.9-7.4a20 20 0 0 0 0-4h3.9a10 10 0 0 1 0 4h-3.9Z"/></svg></a
+      >
+    </li>
+    <li>
+      <a
+        href="https://github.com/MadhavKwatra"
+        target="_blank"
+        rel="noopener"
+        aria-label="GitHub"
+        title="GitHub"
+        ><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a
+      >
+    </li>
+    <li>
+      <a
+        href="https://www.linkedin.com/in/madhav-kwatra/"
+        target="_blank"
+        rel="noopener"
+        aria-label="LinkedIn"
+        title="LinkedIn"
+        ><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a
+      >
+    </li>
+    <li>
+      <a href="https://x.com/madhav_kwatra" target="_blank" rel="noopener" aria-label="X" title="X"
+        ><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></a
+      >
+    </li>
+    <li>
+      <a
+        href="https://www.instagram.com/iammadhavkwatra"
+        target="_blank"
+        rel="noopener"
+        aria-label="Instagram"
+        title="Instagram"
+        ><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg></a
+      >
+    </li>
+  </ul>
+  <p class="small parody-note">Parody game. Not linked to or approved by any company or person.</p>
+  <p class="footer-links">
+    <a href="./about.html#feedback">Feedback</a>
+    <a href="./privacy.html">Privacy</a>
+    <a href="https://github.com/MadhavKwatra/pixel-me-in" target="_blank" rel="noopener"
+      >Open source, MIT</a
+    >
+  </p>
+</footer>
+
+    </div>
+  </body>
+</html>
