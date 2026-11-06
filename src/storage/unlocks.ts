@@ -19,6 +19,16 @@ export function isUnlocked(id: string, stats: Stats): boolean {
   return !rule || rule.ok(stats);
 }
 
-export function unlockHint(id: string): string | undefined {
-  return UNLOCK_RULES[id]?.text;
+export function unlockHint(id: string, stats?: Stats): string | undefined {
+  const rule = UNLOCK_RULES[id];
+  if (!rule || !stats) return rule?.text;
+  const progress: Record<string, [number, number, string]> = {
+    crown: [stats.best, 1500, 'm best'],
+    spaceHelmet: [stats.best, 1500, 'm best'],
+    glasses3d: [stats.totalGears, 150, 'GB saved'],
+    spacesuit: [stats.totalDistance, 5000, 'm total'],
+    labcoat: [stats.runs, 10, 'runs'],
+  };
+  const [current, goal, unit] = progress[id];
+  return `${rule.text} · ${Math.min(goal, Math.floor(current))} / ${goal} ${unit}`;
 }

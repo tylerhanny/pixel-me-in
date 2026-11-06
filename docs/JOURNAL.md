@@ -2,6 +2,13 @@
 
 Newest first. What changed, why, and what broke.
 
+## 2026-11-05 – Workspace art, readable danger and sound
+
+- Redrew both environments, current hazards, RAM and power-ups with a shared pixel palette and shaded surfaces. Added hero clothing detail and mechanical robot detail with distinct charge/fire/recovery poses. Reviewed the Desk composition at phone scale before extending it to the Data Center.
+- Landscape thumb controls no longer cover incoming ground hazards. HUD panels separate score/powers from scenery, danger remains visible for its full six seconds, and locked accessories show current progress. Removed the rotate-phone nag.
+- Pickup tones are rate-limited with a short pitch sequence, robot footsteps are quieter and pause during warnings, and the soundtrack now follows the two active environments. Audio contexts suspend on pause; old music buses and completed nodes disconnect. Signal and lifecycle checks do not substitute for a listening pass.
+- Rendered checks cover all five phrases at three view/speed combinations, power expiry/landing, pause during an attack, rotation and four death/retry cycles with stable listener/body counts. New captures remain local.
+
 ## 2026-11-05 – Readable encounters and a shorter first journey
 
 - Five seeded road phrases replace origin-only random spawning: vault, duck, two jumps, duck-to-jump, and a safe RAM lane with an optional high trail. Spacing includes the entire phrase plus recovery. A visible-road speed cap reserves 1.05 seconds of approach on portrait and wide screens.

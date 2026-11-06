@@ -49,6 +49,11 @@ describe('camera view', () => {
     expect(v.top).toBeCloseTo(0);
   });
 
+  it('keeps short landscape controls below the running lane', () => {
+    const v = computeView(915, 412);
+    expect(412 - (300 - v.top) * v.zoom).toBeGreaterThanOrEqual(115);
+  });
+
   it('wide phones see further ahead', () => {
     expect(computeView(915, 412).width).toBeGreaterThan(700);
   });

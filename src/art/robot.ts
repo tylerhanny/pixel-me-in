@@ -21,6 +21,8 @@ export const ROBOT_FRAMES = [
   'laser',
   'throw',
   'zapped',
+  'charge',
+  'recover',
 ] as const;
 export type RobotFrame = (typeof ROBOT_FRAMES)[number];
 export const ROBOT_WALK = ROBOT_FRAMES.slice(0, 8) as RobotFrame[];
@@ -79,6 +81,10 @@ function walkPose(i: number): Pose {
 
 function pose(f: RobotFrame): Pose {
   if (f.startsWith('walk')) return walkPose(Number(f.slice(4)));
+  if (f === 'charge')
+    return { ...walkPose(0), bob: 0, armF: 1.25, elbowF: -0.3, eyeX: 4, cannon: true, chest: true };
+  if (f === 'recover')
+    return { ...walkPose(0), bob: 4, armF: 0.8, elbowF: 0.6, eyeX: -2, chest: false };
   if (f === 'laser')
     return {
       ...walkPose(0),
@@ -106,16 +112,19 @@ function drawFrame(ctx: CanvasRenderingContext2D, ox: number, f: RobotFrame) {
     const shade = back ? C.steelDeep : C.steelDark;
     g.line(hip, k, 5, back ? C.steelDark : C.steel);
     g.disc(k.x, k.y, 4.5, shade);
+    g.disc(k.x, k.y, 2, C.light);
     g.line(k, { x: ankle.x, y: Math.min(ankle.y, ground - 6) }, 4, back ? C.steelDark : C.steel);
     const fy = Math.min(ankle.y, ground - 6);
     g.rect(ankle.x - 8, fy, 18, 7, shade);
     g.rect(ankle.x - 8, fy + 5, 18, 2, C.visor);
+    g.rect(ankle.x - 6, fy + 1, 13, 1, C.light);
+    for (let dx = -5; dx < 9; dx += 4) g.rect(ankle.x + dx, fy + 5, 2, 2, C.steelDeep);
   };
   const shoulderB: P = { x: 25, y: hip.y - 36 };
   const shoulderF: P = { x: 68, y: hip.y - 36 };
   const arm = (s: P, a: number, elbow: number, back: boolean, cannon = false) => {
-    const e = along(s, a, 16);
-    const h = along(e, a + elbow, cannon ? 20 : 15);
+    const e = along(s, a, cannon ? 12 : 16);
+    const h = along(e, a + elbow, cannon ? 8 : 15);
     g.line(s, e, 4.5, back ? C.steelDark : C.steel);
     g.disc(e.x, e.y, 4, back ? C.steelDeep : C.steelDark);
     g.line(e, h, 4, back ? C.steelDark : C.steel);
@@ -138,7 +147,14 @@ function drawFrame(ctx: CanvasRenderingContext2D, ox: number, f: RobotFrame) {
   g.rect(24, top, 46, 4, C.light);
   g.rect(24, top + 38, 46, 6, C.steelDark);
   g.rect(24, top, 5, 44, C.steelDark);
+  g.rect(29, top + 5, 36, 24, C.steelDark);
+  g.rect(30, top + 6, 34, 1, C.light);
+  g.rect(65, top + 5, 3, 26, C.steelDeep);
+  for (const x of [32, 58]) {
+    for (let y = 15; y < 29; y += 4) g.rect(x, top + y, 5, 2, C.visor);
+  }
   g.disc(47, top + 20, 7, C.steelDeep);
+  g.disc(47, top + 20, 6, C.light);
   g.disc(47, top + 20, 4.5, ps.chest ? C.glow : C.red);
   if (ps.chest) g.dot(46, top + 18, C.glowHot);
   for (const x of [31, 59]) g.rect(x, top + 8, 4, 4, C.yellow); // rivets
@@ -175,6 +191,11 @@ function drawFrame(ctx: CanvasRenderingContext2D, ox: number, f: RobotFrame) {
   g.rect(43 + ex, domeY - 6, 4, 1, C.hair);
   g.rect(49 + ex, domeY - 6, 4, 1, C.hair);
   g.rect(45, domeY + 3, 6, 1, C.mouth);
+  if (f === 'charge' || f === 'laser') {
+    g.rect(44 + ex, domeY - 5, 3, 1, C.hair);
+    g.rect(49, domeY + 1, 3, 3, C.mouth);
+  }
+  if (f === 'recover') g.rect(45, domeY + 2, 7, 2, C.mouth);
   g.dot(51, domeY + 2, C.mouth);
   // glass shine + steel ring + a blinking light on top
   g.rect(35, domeY - 9, 2, 6, C.shine);

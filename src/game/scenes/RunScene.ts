@@ -384,9 +384,12 @@ export class RunScene extends Phaser.Scene {
 
   /** Fit the camera to the screen (called on start and on every resize/rotation). */
   private applyView() {
-    const v = computeView(this.scale.width, this.scale.height);
+    const density = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    const v = computeView(this.scale.width / density, this.scale.height / density);
+    v.zoom *= density;
     this.view = v;
     const cam = this.cameras.main;
+    cam.setSize(this.scale.width, this.scale.height);
     cam.setZoom(v.zoom);
     cam.centerOn(v.left + v.width / 2, v.top + v.height / 2);
     this.layoutLayers(this.layers);
@@ -526,6 +529,9 @@ export class RunScene extends Phaser.Scene {
       seed: this.cfg.seed,
       objects: this.obstacles.countActive() + this.gears.countActive() + this.powers.countActive(),
       power: this.power,
+      viewportW: this.cameras.main.width,
+      viewportH: this.cameras.main.height,
+      groundScreen: (GROUND_Y - this.cameras.main.worldView.y) * this.cameras.main.zoom,
     });
   }
 
@@ -671,7 +677,6 @@ export class RunScene extends Phaser.Scene {
     body.updateFromGameObject();
     s.setData('lesson', null);
     s.setData('ap', false); // pooled sprites: forget the old autopilot jump
-    this.tweens.killTweensOf(s);
   }
 
   private addObstacle(key: string, x: number, high: boolean, hint: HintKind | null): ArcadeSprite {
@@ -723,7 +728,7 @@ export class RunScene extends Phaser.Scene {
     if (!this.cfg.reducedMotion)
       this.tweens.add({
         targets: g,
-        scaleX: { from: 1, to: 0.2 },
+        scaleX: { from: 1, to: 0.85 },
         duration: 450,
         yoyo: true,
         repeat: -1,
@@ -860,7 +865,7 @@ export class RunScene extends Phaser.Scene {
     if (!lost) return;
     this.gearCount -= lost;
     const p = this.player.box;
-    popText(this, p.x, p.y - 80, `-${lost} GB`, '#ff8a8a');
+    if (!this.cfg.reducedMotion) popText(this, p.x, p.y - 80, `-${lost} GB`, '#ff8a8a');
     this.emit(EVENTS.toast, `He grabbed ${lost} GB of your RAM!`);
     if (this.cfg.reducedMotion) return;
     for (let i = 0; i < Math.min(lost, 6); i++) {
@@ -884,7 +889,7 @@ export class RunScene extends Phaser.Scene {
     const id = s.getData('power') as PowerId;
     s.disableBody(true, true);
     sfx.power();
-    popText(this, s.x, s.y - 10, POWER_NAMES[id], '#9cf3ff');
+    if (!this.cfg.reducedMotion) popText(this, s.x, s.y - 10, POWER_NAMES[id], '#9cf3ff');
     this.power = id;
     this.powerUntil = this.runNow + POWER_SECONDS[id] * 1000;
     if (id === 'jetpack') this.player.setFlying(true);
@@ -1027,11 +1032,10 @@ export class RunScene extends Phaser.Scene {
           ? this.robotPose
           : ROBOT_WALK[Math.floor(time / 110) % ROBOT_WALK.length];
       this.robot.setFrame(pose);
-      if (time > this.stompAt) {
-        this.stompAt = time + 440;
+      if (time > this.stompAt && !this.laser && !this.marks.length) {
+        this.stompAt = time + 880;
         sfx.robot();
         if (!this.cfg.reducedMotion) {
-          this.cameras.main.shake(70, 0.0025);
           puff(this, this.robot.x - 10, GROUND_Y, 3, 30);
         }
       }
@@ -1063,7 +1067,7 @@ export class RunScene extends Phaser.Scene {
 
   /** Laser: a blinking warning line at chest height, then the beam. Slide under it! */
   private startLaser(time: number) {
-    this.robotPose = 'laser';
+    this.robotPose = 'charge';
     this.robotPoseUntil = time + LASER_WARN_MS + LASER_FIRE_MS;
     const y = GROUND_Y - 56;
     const warn = this.add.graphics().setDepth(24);
@@ -1151,6 +1155,7 @@ export class RunScene extends Phaser.Scene {
     const l = this.laser;
     if (!l) return;
     if (time >= l.fireAt && !l.beam) {
+      this.robotPose = 'laser';
       l.warn.destroy();
       const v = this.view;
       l.beam = this.add
@@ -1173,7 +1178,11 @@ export class RunScene extends Phaser.Scene {
       if (!this.player.flying && b.bottom > top && b.top < bottom)
         this.crash(this.player.box.x, GROUND_Y - 56);
     }
-    if (time >= l.endAt) this.clearLaser();
+    if (time >= l.endAt) {
+      this.robotPose = 'recover';
+      this.robotPoseUntil = time + 420;
+      this.clearLaser();
+    }
   }
 
   private clearLaser() {
@@ -1205,6 +1214,10 @@ export class RunScene extends Phaser.Scene {
   private zapRobot() {
     if (!this.robot.visible) return;
     this.clearAttacks();
+    if (this.cfg.reducedMotion) {
+      this.robot.x = this.view.left - 220;
+      return;
+    }
     this.robot.setFrame('zapped');
     this.robotPose = 'zapped';
     this.robotPoseUntil = this.runNow + 400;
@@ -1232,7 +1245,7 @@ export class RunScene extends Phaser.Scene {
 
   // ---------------------------------------------------------------- tutorial
 
-  /** A lesson starts when its object gets close: time slows until the player acts. */
+  /** A lesson starts as its object approaches, at the run's normal speed. */
   private updateTutorial() {
     if (this.tutorialFinished) return;
     if (this.activeLesson !== null) {
@@ -1313,6 +1326,7 @@ export class RunScene extends Phaser.Scene {
       gears: this.gearCount,
       power: this.power,
       powerLeft: left,
+      dangerLeft: Math.max(0, (this.dangerUntil - this.runNow) / 1000),
       force,
     });
   }

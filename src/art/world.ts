@@ -4,6 +4,7 @@
  * stays small. Contributors can swap any of these for real sprites later.
  */
 import { VIEW_H, VIEW_W } from '../config';
+import * as workspace from './workspaces';
 
 export type Painter = (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 
@@ -334,216 +335,28 @@ const space: ZoneArt = {
 const desk: ZoneArt = {
   id: 'desk',
   name: 'Your Desk',
-  accent: 0x5fd0ff,
+  accent: 0xe8bd7f,
   clouds: false,
-  sky: sky('#231f42', '#4b3f73'),
-  far: (ctx) => {
-    // RGB light strip along the wall
-    const cols = ['#ff5a8a', '#e8c547', '#4dff88', '#5fd0ff', '#9b7bff'];
-    for (let x = 0; x < LAYER_W; x += 6) rect(ctx, cols[(x / 6) % cols.length], x, 4, 4, 2);
-    // window with the night city
-    rect(ctx, '#14121c', 18, 18, 136, 96);
-    rect(ctx, '#1b2a55', 24, 24, 124, 84);
-    pixelDisc(ctx, '#f4f1e8', 124, 44, 8);
-    pixelDisc(ctx, '#1b2a55', 128, 41, 6);
-    const r = rng(21);
-    for (let i = 0; i < 14; i++) rect(ctx, '#f4f1e8', 26 + r() * 118, 26 + r() * 40, 1, 1);
-    for (let x = 26; x < 146; x += 14) {
-      const hh = 14 + Math.floor(r() * 26);
-      rect(ctx, '#2c3a6b', x, 108 - hh, 12, hh);
-      if (hh > 22) rect(ctx, '#e8c547', x + 4, 112 - hh, 2, 2);
-    }
-    rect(ctx, '#14121c', 84, 24, 4, 84);
-    rect(ctx, '#14121c', 24, 64, 124, 4);
-    // the big monitor: code, and a RAM bar that is almost full
-    rect(ctx, '#14121c', 196, 26, 208, 110);
-    rect(ctx, '#16213e', 203, 33, 194, 92);
-    const code = ['#5fd0ff', '#9b7bff', '#4dff88', '#e8c547', '#f4f1e8'];
-    for (let y = 40; y < 96; y += 7) {
-      const i = Math.round((y - 40) / 7);
-      rect(ctx, code[i % code.length], 210 + (i % 3) * 8, y, 40 + ((i * 23) % 70), 3);
-    }
-    rect(ctx, '#2a2f55', 210, 104, 180, 12);
-    rect(ctx, '#d84b4b', 212, 106, 170, 8);
-    rect(ctx, '#14121c', 290, 136, 20, 26);
-    rect(ctx, '#14121c', 268, 160, 64, 6);
-    // a poster with a heart
-    rect(ctx, '#e8c547', 432, 30, 56, 72);
-    rect(ctx, '#14121c', 436, 34, 48, 64);
-    pixelDisc(ctx, '#d84b4b', 452, 58, 8);
-    pixelDisc(ctx, '#d84b4b', 468, 58, 8);
-    rect(ctx, '#d84b4b', 446, 60, 28, 8);
-    for (let k = 0; k < 10; k++) rect(ctx, '#d84b4b', 450 + k, 66 + k, 20 - k * 2, 1);
-    rect(ctx, '#3a335f', 0, 160, LAYER_W, 20);
-  },
-  mid: (ctx) => {
-    // keyboard with an RGB underglow
-    rect(ctx, '#5fd0ff', 18, 168, 124, 2);
-    rect(ctx, '#2a2a3a', 20, 156, 120, 12);
-    for (let x = 24; x < 136; x += 6)
-      for (let y = 158; y < 166; y += 4) rect(ctx, '#5a5a7a', x, y, 4, 2);
-    // plant
-    rect(ctx, '#c46a4a', 176, 148, 22, 22);
-    rect(ctx, '#a3553a', 174, 146, 26, 4);
-    pixelDisc(ctx, '#2f6b3a', 187, 132, 12);
-    pixelDisc(ctx, '#3f8a4a', 180, 128, 7);
-    pixelDisc(ctx, '#3f8a4a', 194, 124, 6);
-    // books
-    rect(ctx, '#5b8bd4', 226, 150, 40, 8);
-    rect(ctx, '#d84b4b', 230, 142, 34, 8);
-    rect(ctx, '#e8c547', 224, 158, 44, 12);
-    // PC tower: glass side, RGB fans and glowing RAM inside
-    rect(ctx, '#1f1f2e', 300, 84, 58, 86);
-    rect(ctx, '#2d2d44', 306, 90, 46, 74);
-    pixelDisc(ctx, '#ff5a8a', 329, 108, 9);
-    pixelDisc(ctx, '#2d2d44', 329, 108, 5);
-    pixelDisc(ctx, '#5fd0ff', 329, 140, 9);
-    pixelDisc(ctx, '#2d2d44', 329, 140, 5);
-    for (let x = 310; x < 324; x += 4) rect(ctx, '#4dff88', x, 120, 2, 10);
-    // desk lamp
-    rect(ctx, '#14121c', 424, 164, 30, 6);
-    for (let k = 0; k < 40; k++) rect(ctx, '#5c6080', 438 - k * 0.4, 164 - k, 3, 1);
-    for (let k = 0; k < 26; k++) rect(ctx, '#5c6080', 422 + k, 124 + k * 0.3, 1, 3);
-    rect(ctx, '#5c6080', 446, 126, 18, 8);
-    rect(ctx, '#ffe39a', 448, 134, 14, 2);
-  },
-  ground: (ctx, w) => {
-    rect(ctx, '#a8744a', 0, 0, w, 60);
-    rect(ctx, '#c99566', 0, 0, w, 4);
-    for (const [y, len] of [
-      [12, 22],
-      [21, 34],
-      [30, 18],
-    ])
-      for (let x = (y * 3) % 16; x < w; x += 40) rect(ctx, '#8e5f3a', x, y, len, 1);
-    rect(ctx, '#7a4f30', 0, 42, w, 18);
-    rect(ctx, '#5f3c24', 0, 42, w, 2);
-  },
-  low: {
-    key: 'mug',
-    w: 26,
-    h: 28,
-    draw: (ctx) => {
-      rect(ctx, 'rgba(255,255,255,0.7)', 7, 0, 2, 3);
-      rect(ctx, 'rgba(255,255,255,0.7)', 12, 1, 2, 3);
-      rect(ctx, '#f2f2f2', 2, 6, 17, 22);
-      rect(ctx, '#d6d6d6', 2, 24, 17, 4);
-      rect(ctx, '#6b4226', 3, 6, 15, 3);
-      rect(ctx, '#f2f2f2', 19, 10, 6, 3);
-      rect(ctx, '#f2f2f2', 22, 10, 3, 11);
-      rect(ctx, '#f2f2f2', 19, 18, 6, 3);
-      pixelDisc(ctx, '#d84b4b', 8, 15, 2);
-      pixelDisc(ctx, '#d84b4b', 12, 15, 2);
-      rect(ctx, '#d84b4b', 7, 16, 7, 2);
-      rect(ctx, '#d84b4b', 9, 18, 3, 2);
-    },
-  },
-  high: {
-    key: 'headset',
-    w: 48,
-    h: 38,
-    draw: (ctx) => {
-      rect(ctx, '#14121c', 23, 0, 2, 10);
-      rect(ctx, '#3a3f66', 10, 9, 28, 4);
-      rect(ctx, '#3a3f66', 7, 12, 4, 12);
-      rect(ctx, '#3a3f66', 37, 12, 4, 12);
-      rect(ctx, '#2d2d3a', 3, 22, 12, 16);
-      rect(ctx, '#2d2d3a', 33, 22, 12, 16);
-      rect(ctx, '#5fd0ff', 3, 22, 2, 16);
-      rect(ctx, '#ff5a8a', 43, 22, 2, 16);
-    },
-  },
+  sky: sky('#211e2c', '#4d3540'),
+  far: workspace.deskFar,
+  mid: workspace.deskMid,
+  ground: workspace.deskGround,
+  low: { key: 'mug', w: 34, h: 36, draw: workspace.mug },
+  high: { key: 'headset', w: 48, h: 44, draw: workspace.headset },
 };
 
 /** The villain's home: endless server racks, blinking lights, cold air. */
 const datacenter: ZoneArt = {
   id: 'datacenter',
   name: 'Data Center',
-  accent: 0x4dff88,
+  accent: 0x8fd4d2,
   clouds: false,
-  sky: sky('#070b16', '#141d33'),
-  far: (ctx) => {
-    const r = rng(33);
-    rect(ctx, '#0f1524', 0, 0, LAYER_W, 180);
-    rect(ctx, '#3a4560', 0, 6, LAYER_W, 6);
-    for (let x = 0; x < LAYER_W; x += 8) rect(ctx, '#232d45', x, 12, 2, 6);
-    for (let x = 0; x < LAYER_W; x += 44) {
-      rect(ctx, '#1c2436', x + 2, 22, 40, 158);
-      rect(ctx, '#2a3550', x + 2, 22, 40, 2);
-      rect(ctx, '#2a3550', x + 2, 22, 2, 158);
-      for (let y = 28; y < 176; y += 8) {
-        rect(ctx, '#151b2a', x + 6, y + 6, 32, 1);
-        const roll = r();
-        const led = roll > 0.92 ? '#ff5a5a' : roll > 0.6 ? '#5fd0ff' : '#4dff88';
-        rect(ctx, led, x + 8, y + 2, 2, 2);
-        if (r() > 0.4) rect(ctx, '#4dff88', x + 12, y + 2, 2, 2);
-        if (r() > 0.7) rect(ctx, '#e8c547', x + 16, y + 2, 2, 2);
-      }
-    }
-  },
-  mid: (ctx) => {
-    // cooling pipes across the ceiling
-    rect(ctx, '#5c6b8a', 0, 26, LAYER_W, 10);
-    rect(ctx, '#8a99b8', 0, 27, LAYER_W, 2);
-    rect(ctx, '#46536e', 0, 40, LAYER_W, 6);
-    for (let x = 30; x < LAYER_W; x += 128) rect(ctx, '#46536e', x, 46, 6, 20);
-    // front racks with glowing doors
-    for (let x = 60; x < LAYER_W; x += 170) {
-      rect(ctx, '#232d45', x, 54, 60, 116);
-      rect(ctx, '#2e3a58', x + 4, 58, 52, 108);
-      rect(ctx, '#2e8bff', x + 6, 60, 2, 104);
-      rect(ctx, '#2e8bff', x + 52, 60, 2, 104);
-      for (let y = 66; y < 160; y += 10) rect(ctx, '#1a2133', x + 12, y, 36, 4);
-      rect(ctx, '#4dff88', x + 44, 64, 3, 3);
-    }
-    // hazard strip on the floor edge
-    for (let x = 0; x < LAYER_W; x += 12) {
-      rect(ctx, '#e8c547', x, 166, 6, 4);
-      rect(ctx, '#14121c', x + 6, 166, 6, 4);
-    }
-  },
-  ground: (ctx, w) => {
-    rect(ctx, '#4a5268', 0, 0, w, 60);
-    rect(ctx, '#6b7590', 0, 0, w, 3);
-    for (let x = 0; x < w; x += 16) rect(ctx, '#363c50', x, 0, 1, 60);
-    for (const y of [16, 32, 48]) rect(ctx, '#363c50', 0, y, w, 1);
-    // air vents in every other floor tile
-    for (let tx = 0; tx < w; tx += 32)
-      for (let y = 4; y < 14; y += 3)
-        for (let x = 3; x < 14; x += 3) rect(ctx, '#2b3040', tx + x, y, 1, 1);
-  },
-  low: {
-    key: 'coolingunit',
-    w: 30,
-    h: 28,
-    draw: (ctx) => {
-      rect(ctx, '#8a93a8', 0, 2, 30, 26);
-      rect(ctx, '#a9b2c6', 0, 2, 30, 2);
-      for (let x = 3; x < 27; x += 4) rect(ctx, '#5c6680', x, 5, 2, 3);
-      pixelDisc(ctx, '#4a5268', 15, 18, 8);
-      pixelDisc(ctx, '#2b3040', 15, 18, 2);
-      rect(ctx, '#2b3040', 9, 17, 12, 2);
-      rect(ctx, '#2b3040', 14, 12, 2, 12);
-      rect(ctx, '#4dff88', 25, 24, 2, 2);
-    },
-  },
-  high: {
-    key: 'drone',
-    w: 50,
-    h: 24,
-    draw: (ctx) => {
-      rect(ctx, '#c8cce0', 0, 3, 14, 2);
-      rect(ctx, '#c8cce0', 36, 3, 14, 2);
-      rect(ctx, '#5c6080', 6, 5, 2, 5);
-      rect(ctx, '#5c6080', 42, 5, 2, 5);
-      rect(ctx, '#5c6080', 6, 9, 38, 3);
-      rect(ctx, '#3a4560', 14, 8, 22, 12);
-      rect(ctx, '#14121c', 19, 11, 12, 6);
-      rect(ctx, '#ff5a5a', 22, 12, 6, 4);
-      rect(ctx, '#ffd0d0', 23, 13, 2, 1);
-      rect(ctx, '#5c6080', 24, 20, 2, 4);
-    },
-  },
+  sky: sky('#101b2b', '#23394b'),
+  far: workspace.dataFar,
+  mid: workspace.dataMid,
+  ground: workspace.dataGround,
+  low: { key: 'coolingunit', w: 34, h: 34, draw: workspace.coolingUnit },
+  high: { key: 'drone', w: 50, h: 31, draw: workspace.drone },
 };
 
 /** "Save Your RAM": your desk, then the data center (they repeat). */
@@ -566,70 +379,11 @@ export const SPRITES: Record<string, { w: number; h: number; draw: Painter }> = 
       for (let i = 3; i < 25; i++) rect(ctx, '#8a5a30', i, i, 2, 2);
     },
   },
-  /** A stick of RAM (1 GB): green board, black chips, gold pins. */
-  ram: {
-    w: 22,
-    h: 11,
-    draw: (ctx) => {
-      rect(ctx, '#14121c', 0, 0, 22, 9);
-      rect(ctx, '#2f8a4a', 1, 1, 20, 7);
-      rect(ctx, '#4fb36a', 1, 1, 20, 1);
-      for (const x of [2, 7, 12, 17]) rect(ctx, '#14121c', x, 3, 4, 4);
-      rect(ctx, '#f2f2f2', 7, 1, 3, 1);
-      for (let x = 1; x < 21; x += 2) if (x < 9 || x > 11) rect(ctx, '#e8c547', x, 9, 1, 2);
-    },
-  },
-  /** Rare RGB gaming stick (8 GB): dark heatsink with a rainbow light bar. */
-  ramRgb: {
-    w: 24,
-    h: 13,
-    draw: (ctx) => {
-      rect(ctx, '#14121c', 0, 0, 24, 11);
-      const cols = ['#ff5a8a', '#f08a24', '#e8c547', '#4dff88', '#5fd0ff', '#9b7bff'];
-      cols.forEach((c, i) => rect(ctx, c, 1 + i * 3.7, 1, 4, 2));
-      rect(ctx, '#2d2d3a', 1, 3, 22, 7);
-      rect(ctx, '#4a4e6e', 3, 5, 18, 1);
-      rect(ctx, '#e8c547', 3, 7, 6, 1);
-      for (let x = 1; x < 23; x += 2) if (x < 10 || x > 12) rect(ctx, '#e8c547', x, 11, 1, 2);
-    },
-  },
-  /** Firewall (the shield power-up): a brick wall. */
-  shield: {
-    w: 20,
-    h: 20,
-    draw: (ctx) => {
-      pixelDisc(ctx, '#f08a24', 10, 10, 9);
-      rect(ctx, '#f2f2f2', 4, 5, 12, 10);
-      for (const [y, off] of [
-        [5, 0],
-        [9, 3],
-        [13, 0],
-      ])
-        for (let x = 4 + off; x < 16; x += 6) rect(ctx, '#d84b4b', x, y, 5, 2);
-    },
-  },
-  /** Download More RAM (the magnet power-up): a big down arrow. */
-  magnet: {
-    w: 20,
-    h: 20,
-    draw: (ctx) => {
-      pixelDisc(ctx, '#2f8a4a', 10, 10, 9);
-      rect(ctx, '#f2f2f2', 8, 4, 4, 7);
-      for (let k = 0; k < 5; k++) rect(ctx, '#f2f2f2', 5 + k, 10 + k, 10 - k * 2, 1);
-      rect(ctx, '#e8c547', 5, 15, 10, 2);
-    },
-  },
-  jetpack: {
-    w: 20,
-    h: 20,
-    draw: (ctx) => {
-      pixelDisc(ctx, '#8e4fb3', 10, 10, 9);
-      rect(ctx, '#d6d6d6', 6, 4, 4, 9);
-      rect(ctx, '#d6d6d6', 11, 4, 4, 9);
-      rect(ctx, '#f08a24', 7, 13, 2, 3);
-      rect(ctx, '#f08a24', 12, 13, 2, 3);
-    },
-  },
+  ram: { w: 26, h: 16, draw: (c) => workspace.ram(c) },
+  ramRgb: { w: 26, h: 16, draw: (c) => workspace.ram(c, true) },
+  shield: { w: 28, h: 28, draw: (c) => workspace.power(c, 'shield') },
+  magnet: { w: 28, h: 28, draw: (c) => workspace.power(c, 'magnet') },
+  jetpack: { w: 28, h: 28, draw: (c) => workspace.power(c, 'jetpack') },
   flame: {
     w: 6,
     h: 10,

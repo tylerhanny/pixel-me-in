@@ -34,7 +34,9 @@ export function computeView(screenW: number, screenH: number): View {
   const width = screenW / zoom;
   const height = screenH / zoom;
   // Keep the bottom of the world (ground) at the bottom of the screen.
-  return { zoom, left: 0, top: WORLD_H - height, width, height, portrait };
+  // Short landscape screens reserve 116 CSS px below the running lane for thumbs.
+  const thumbRoom = screenH <= 500 ? Math.max(0, (116 - 60 * zoom) / zoom) : 0;
+  return { zoom, left: 0, top: WORLD_H - height + thumbRoom, width, height, portrait };
 }
 
 /** Where the runner stands: a bit left of the middle, never too far right on narrow screens. */

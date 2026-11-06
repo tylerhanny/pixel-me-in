@@ -2,13 +2,21 @@
 
 **Put your face in a 2D pixel-art runner game – and save your RAM from the data center.** Take a selfie (or upload a photo), watch it turn into pixels, then run across your desk and through a data center, grabbing every stick of RAM before _The Utilizer_ (a made-up cartoon villain) does.
 
-▶️ **Play free: https://play.madhavkwatra.in**
+▶️ **[Play the improvement fork](https://tylerhanny.github.io/pixel-me-in/)** · [Original game by Madhav Kwatra](https://play.madhavkwatra.in)
 
 _Parody: a fan-made joke game, not linked to or approved by any company or person. See [About](about.html)._
 
 🔒 **Your photo never leaves your device.** Face detection runs in your browser. There is no server and no upload. [How we make sure of that →](docs/PRIVACY.md)
 
 ![Pixel Me In](public/og-image.png)
+
+## This release
+
+Dependable on-press phone buttons, corrected collision bodies, five authored encounter types, earlier robot attacks, safe power-up transitions and separate normal/slow records. Both workspaces and playable sprites have been redrawn; attack poses, persistent danger feedback and a quieter warning-focused mix improve readability.
+
+Quick play needs no photo or face-model download. Photo processing stays local. After the first online visit, wait for “Ready to play offline”; use Settings → Offline → Download for new-photo creation without a connection. Updates wait for the Reload prompt and preserve the saved avatar. Both analytics integrations are disabled unless explicitly enabled at build time.
+
+The production artifact is `dist/`; relative asset paths support a subdirectory deployment. Preview hosting uses a separate `preview` branch. Tests target Chromium desktop and phone emulation; physical-device and auditory listening checks remain separate from automation.
 
 ## Features
 
@@ -26,9 +34,9 @@ _Parody: a fan-made joke game, not linked to or approved by any company or perso
 Needs Node.js 20+.
 
 ```bash
-git clone https://github.com/MadhavKwatra/pixel-me-in.git
+git clone --branch improvement/playable-release https://github.com/tylerhanny/pixel-me-in.git
 cd pixel-me-in
-npm install        # also copies the MediaPipe runtime into public/mediapipe/wasm
+npm ci             # also copies the MediaPipe runtime into public/mediapipe/wasm
 npm run dev        # http://localhost:5190
 ```
 

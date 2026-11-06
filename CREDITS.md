@@ -1,5 +1,7 @@
 # Credits
 
+Original game by **Madhav Kwatra**. The improvement fork retains the original MIT license and attribution. New workspace painters, sprite refinements and synthesized audio arrangements are original code contributions under the same license; no third-party art packs or audio recordings were added.
+
 | What                                                                                                  | License     | Link                                        |
 | ----------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------- |
 | Phaser (game engine)                                                                                  | MIT         | https://phaser.io                           |

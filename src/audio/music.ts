@@ -14,12 +14,10 @@ interface Song {
   lead: OscillatorType;
 }
 
-// Backyard, Rollercoaster, Beach, Space
+// Desk and Data Center: the same harmonic family, with a cooler, tighter second loop.
 const SONGS: Song[] = [
-  { bpm: 132, bars: [60, 65, 67, 60], arp: [0, 4, 7, 12, 7, 4, 7, 4], lead: 'square' },
-  { bpm: 148, bars: [62, 62, 65, 67], arp: [0, 7, 12, 7, 0, 7, 14, 12], lead: 'square' },
-  { bpm: 120, bars: [64, 60, 62, 59], arp: [0, 4, 9, 4, 12, 9, 4, 9], lead: 'triangle' },
-  { bpm: 110, bars: [57, 53, 55, 52], arp: [0, 3, 7, 10, 12, 10, 7, 3], lead: 'sawtooth' },
+  { bpm: 124, bars: [60, 57, 53, 55], arp: [0, 4, 7, 12, 7, 4, 9, 7], lead: 'triangle' },
+  { bpm: 138, bars: [57, 53, 60, 55], arp: [0, 7, 12, 7, 3, 7, 10, 7], lead: 'square' },
 ];
 
 // Photo Booth: a calm loop while you dress up.
@@ -52,9 +50,14 @@ function note(
   const g = ac.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq(midi), t);
-  g.gain.setValueAtTime(vol, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.006);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   osc.connect(g).connect(master!);
+  osc.onended = () => {
+    osc.disconnect();
+    g.disconnect();
+  };
   osc.start(t);
   osc.stop(t + dur + 0.02);
 }
@@ -69,6 +72,10 @@ function hat(ac: AudioContext, t: number) {
   g.gain.value = 0.25;
   src.buffer = buf;
   src.connect(g).connect(master!);
+  src.onended = () => {
+    src.disconnect();
+    g.disconnect();
+  };
   src.start(t);
 }
 
@@ -106,6 +113,7 @@ export function playBoothMusic() {
 function playSong(next: Song) {
   const ac = getAudioContext();
   if (!enabled || !ac) return;
+  stopMusic();
   song = next;
   if (!master) {
     master = ac.createGain();
@@ -134,6 +142,9 @@ export function stopMusic() {
   window.clearInterval(timer);
   timer = 0;
   song = null;
+  // A new bus prevents already scheduled notes leaking into the next zone/retry.
+  master?.disconnect();
+  master = null;
 }
 
 /** Short "game over" tune. */

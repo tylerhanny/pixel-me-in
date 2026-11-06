@@ -17,6 +17,7 @@ export class Hud {
   private metresEl!: HTMLElement;
   private gearsEl!: HTMLElement;
   private powerEl!: HTMLElement;
+  private dangerEl!: HTMLElement;
   private last = { metres: -1, gears: -1, power: '' };
   private lastHint: HintKind | null = null;
 
@@ -38,12 +39,14 @@ export class Hud {
           <span aria-hidden="true">❚❚</span>${touch ? '' : '<small>Esc</small>'}
         </button>
       </div>
+      <div class="hud-danger" data-danger hidden></div>
       <div data-banners></div>
       <div class="sr-only" aria-live="polite" data-live></div>
     `;
     this.metresEl = this.root.querySelector('[data-m]')!;
     this.gearsEl = this.root.querySelector('[data-g]')!;
     this.powerEl = this.root.querySelector('[data-p]')!;
+    this.dangerEl = this.root.querySelector('[data-danger]')!;
     this.root.querySelector('.pause-btn')!.addEventListener('click', () => this.onPause());
     this.root
       .querySelector('[data-skip]')
@@ -75,6 +78,9 @@ export class Hud {
 
   update(d: HudData) {
     if (!this.metresEl) return;
+    this.dangerEl.hidden = d.dangerLeft <= 0;
+    this.dangerEl.textContent =
+      d.dangerLeft > 0 ? `⚠ One more hit ends the run · ${Math.ceil(d.dangerLeft)}s` : '';
     if (d.metres !== this.last.metres) this.metresEl.textContent = formatNumber(d.metres);
     if (d.gears !== this.last.gears) {
       this.gearsEl.textContent = formatGB(d.gears);
@@ -106,6 +112,7 @@ export class Hud {
   banner(text: string, zoneIndex: number) {
     const holder = this.root.querySelector('[data-banners]');
     if (!holder) return;
+    holder.querySelector('.banner:not(.chase)')?.remove();
     const el = document.createElement('div');
     el.className = 'banner';
     el.textContent =

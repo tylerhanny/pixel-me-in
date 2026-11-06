@@ -83,3 +83,31 @@ test('touch buttons jump on press; a real downward swipe slides and cancellation
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
   await expect.poll(async () => (await state(page)).sliding).toBe(0);
 });
+
+test('rotation resizes the rendered camera and keeps landscape controls below the road', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'phone rotation');
+  await play(page);
+  // Chromium's window-resize protocol cannot resize an element-fullscreen window.
+  await page.evaluate(async () => {
+    if (document.fullscreenElement) await document.exitFullscreen();
+  });
+  const density = await page.evaluate(() => Math.min(2, devicePixelRatio));
+  for (const [width, height] of [
+    [915, 412],
+    [360, 740],
+    [915, 412],
+  ]) {
+    await page.setViewportSize({ width, height });
+    await expect.poll(async () => (await state(page)).viewportW).toBe(width * density);
+    await expect.poll(async () => (await state(page)).viewportH).toBe(height * density);
+    if (width > height) {
+      const jump = (await page.getByRole('button', { name: 'Jump', exact: true }).boundingBox())!;
+      await expect
+        .poll(async () => (await state(page)).groundScreen / density)
+        .toBeLessThan(jump.y);
+    }
+  }
+});

@@ -50,7 +50,7 @@ export const editorScreen: Screen = (app, root) => {
     return;
   }
   const stats = getStats();
-  const lock = (id: string) => (isUnlocked(id, stats) ? undefined : unlockHint(id));
+  const lock = (id: string) => (isUnlocked(id, stats) ? undefined : unlockHint(id, stats));
   let tab: Tab = 'look';
   let animTimer = 0;
 

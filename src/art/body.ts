@@ -348,7 +348,7 @@ function drawFrame(
   foot(j.legB.ankle, j.legB.footAngle, lb.shoe, OUTLINE);
 
   // torso, with a shaded back edge and a neck
-  line(j.hip, j.neck, 4.6, o.top);
+  line(j.hip, j.neck, 5, o.top);
   const back = { x: -Math.cos(j.lean) * 3, y: -Math.sin(j.lean) * 3 };
   line(
     { x: j.hip.x + back.x, y: j.hip.y + back.y },
@@ -357,6 +357,12 @@ function drawFrame(
     o.topDark,
   );
   disc(j.hip.x, j.hip.y, 4.4, o.bottom);
+  // Cloth seams and a light shoulder edge give volume at native phone scale.
+  const seam = lerp(j.hip, j.neck, 0.35);
+  line({ x: seam.x + 3, y: seam.y }, { x: j.neck.x + 3, y: j.neck.y + 2 }, 0.65, '#bce6dc');
+  stripe(dot, j.hip, j.neck, 0.08, o.topDark);
+  const pocket = lerp(j.hip, j.neck, 0.58);
+  line({ x: pocket.x + 1, y: pocket.y }, { x: pocket.x + 3, y: pocket.y }, 0.6, o.topDark);
   o.extra?.(dot, j.hip, j.neck);
   disc(j.neck.x, j.neck.y - 1, 1.6, skin);
 
@@ -365,6 +371,7 @@ function drawFrame(
   line(j.legF.hip, j.legF.knee, 2, lf.thigh);
   line(j.legF.knee, j.legF.ankle, 1.6, lf.shin);
   foot(j.legF.ankle, j.legF.footAngle, lf.shoe, OUTLINE);
+  dot(Math.round(j.legF.ankle.x + 1), Math.round(j.legF.ankle.y), '#f2e7cf');
   const af = armColours(false);
   line(j.armF.shoulder, j.armF.elbow, 1.6, af.upper);
   line(j.armF.elbow, j.armF.hand, 1.3, af.fore);

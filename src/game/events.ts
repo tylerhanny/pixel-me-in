@@ -37,6 +37,7 @@ export interface HudData {
   power: 'shield' | 'magnet' | 'jetpack' | null;
   /** 0..1 time left for timed power-ups. */
   powerLeft: number;
+  dangerLeft: number;
   force: boolean;
 }
 

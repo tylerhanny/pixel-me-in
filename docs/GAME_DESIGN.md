@@ -12,65 +12,51 @@ A parody of the late-Oct 2026 news: OpenAI's CEO said on a podcast that RAM sitt
 - **Villain "The Utilizer"**: a made-up cartoon tech CEO in a glass dome on the robot body (drawn in code, never from a photo, no real name or logos). Rush attacks: _utilization beam_ (slide) and _cloud drop_ (jump). A stumble costs a quarter of this run's RAM (`ramLost`); caught = "Utilized!".
 - **Power-ups**: Firewall (blocks one crash), Download More RAM (pulls RAM, every stick x2, 8 s), Jetpack.
 - **Zones** (release 1): Your Desk → Data Center, repeating. Old zones are kept as `CLASSIC_ZONES`.
-- **Release 2 ideas**: Neon City (flying cars to slide under, drones, "Upgrade to Cloud RAM™" billboards), The Cloud (run on clouds with floating server racks, RAM worth more), Classic mode switch, optional "put any face on the villain" (local only), a RAM shop for unlocks.
+- **Historical ideas, outside this release**: Neon City (flying cars to slide under, drones, "Upgrade to Cloud RAM™" billboards), The Cloud (run on clouds with floating server racks, RAM worth more), Classic mode switch, optional "put any face on the villain" (local only), a RAM shop for unlocks.
 - **Rules for the joke**: satire yes, fake quotes no; parody note on About and in the footer; no ads or merch with anyone's likeness.
 
 ## Modes
 
-| Mode                  | Status | Notes                                                                                              |
-| --------------------- | ------ | -------------------------------------------------------------------------------------------------- |
-| **Zone Run**          | v1 ✅  | Endless runner. New world every 500 m. Robot chase in the last 90 m of each zone.                  |
-| **Photo Booth**       | v1 ✅  | Dress up the avatar, save/share a picture.                                                         |
-| **Debug view**        | v1 ✅  | `?debug` or Konami code. Hitboxes, FPS, seed, speed.                                               |
-| Skate mode            | v2     | Skateboard / inline skates. Rails to grind, ramps, air tricks, combo score.                        |
-| Dev mode ("Bug Hunt") | v2     | Coder theme: jump bugs, slide under merge-conflict walls, coffee + semicolons, "Prod Outage" boss. |
-| Daily Run             | v2     | Same seed for everyone each day (`makeRng(seed)` is ready).                                        |
-| Friends mode          | later  | A friend's face on the robot.                                                                      |
+| Mode            | Status | Notes                                                                             |
+| --------------- | ------ | --------------------------------------------------------------------------------- |
+| **Zone Run**    | v1 ✅  | Endless runner. New world every 180 m. Robot chase in the last 45 m of each zone. |
+| **Photo Booth** | v1 ✅  | Dress up the avatar, save/share a picture.                                        |
+| **Debug view**  | v1 ✅  | `?debug` or Konami code. Hitboxes, FPS, seed, speed.                              |
 
 ## Controls
 
 | Action             | Keyboard           | Touch                                    | Gamepad        |
 | ------------------ | ------------------ | ---------------------------------------- | -------------- |
-| Jump / double jump | Space, ↑, W, click | Tap anywhere / swipe up (or Jump button) | A / d-pad up   |
+| Jump / double jump | Space, ↑, W, click | Jump button; tap/swipe up also available | A / d-pad up   |
 | Short hop          | Release jump early | Release early                            | Release early  |
-| Slide / fast fall  | ↓, S (hold)        | Swipe down + hold (or Slide button)      | B / d-pad down |
+| Slide / fast fall  | ↓, S (hold)        | Hold Slide; swipe down also available    | B / d-pad down |
 | Pause              | Esc, P             | II button                                | Start          |
 
-## Zones (`src/art/world.ts`)
+## Zones and pacing
 
-| #   | Zone          | Low obstacle (jump) | High obstacle (slide) |
-| --- | ------------- | ------------------- | --------------------- |
-| 1   | Backyard      | Garden gnome        | Clothesline           |
-| 2   | Rollercoaster | Traffic cone        | Coaster bar           |
-| 3   | Beach         | Sandcastle          | Seagull               |
-| 4   | Space         | Moon rock           | UFO                   |
+Your Desk (mug / suspended headset) and Data Center (cooling unit / drone) alternate every 180 m. Warm desk lighting and cold server racks share hard pixel outlines; bright playable objects sit ahead of quiet scenery. Classic artwork remains available in source but is not an active mode.
 
-A wooden crate appears in every zone. After Space, the zones loop ("lap 2").
+Five seeded phrases in `src/game/encounters.ts` provide vault, duck, two jumps, duck-to-jump and optional high RAM trails. Spacing includes each phrase's full width and recovery; the reward phrase always offers a safe low route. Speed grows from 230 to 520 px/s at 0.28 per metre, capped by visible road to preserve 1.05 seconds of approach. Slow mode multiplies speed by 0.75. Short landscape screens reserve space below the road for thumb buttons.
 
-## Balance (`src/game/rules.ts`)
+Jump −640 px/s, double jump −560, gravity 1900. Standing body 64 px, slide body 38 px; high hazards end 48 px above the road. Jump buffer 130 ms, coyote time 90 ms and early-release short hops remain.
 
-- Speed: 230 px/s → +0.12 px/s per metre → max 520 px/s. Slow mode: ×0.75.
-- 40 world px = 1 m. Gap between patterns: 1.7 s → 0.95 s with difficulty, random ×0.85–1.3, ×0.8 in a robot chase, never below 0.8 s.
-- Jump −640 px/s, double jump −560, gravity 1900. High obstacles start 60 px above the ground; standing hitbox is 64 px tall, sliding 38 px.
-- Power-ups: first at 120 m, then at least one every 250 m (10 % chance per pattern in between), never while one is active.
-- Feel: jump buffer 130 ms, coyote time 90 ms, extra fall gravity +1000, apex float while jump is held.
+## Practice and robot
 
-## Tutorial (first run)
+First-run practice teaches jump, slide, double jump and Firewall at normal speed. It is skippable and replayable; a missed action is not reported as success.
 
-Jump → slide → double jump → grab a power-up. Time slows to 25 % near each lesson until the player does the move. Replay it from How to play.
+The last 45 m of each zone is a robot encounter. Existing road hazards clear before attacks begin. The first attack is a laser: 1.1 s of anticipation, then a 350 ms beam to slide under. Bomb targets remain visible and stationary during their 900 ms flight; the landed bomb then scrolls along the road. Attacks leave recovery time and wait while jetpack is active.
 
-## The robot
-
-- **Robot Rush** (last 90 m of each zone): instead of normal obstacles the robot attacks, always with a warning – laser (blinking line for 0.8 s → slide) or bomb (red ring where it lands → jump). It gets zapped away when the zone changes.
-- **Stumble** (final, owner's pick 2026-11-02): first crash = stumble + slowdown, the robot stays right behind you for 6 s; crash again in that time = caught. A shield still absorbs a crash.
+A first crash causes a stumble, brief protection and six seconds of danger. A second crash during danger ends the run; surviving restores safety. The HUD shows the remaining danger time. A shield absorbs one hit without starting danger.
 
 ## Power-ups
 
-| Power   | Effect                                                                   |
-| ------- | ------------------------------------------------------------------------ |
-| Shield  | Survive one crash (then 0.7 s invulnerable).                             |
-| Magnet  | Gears within 200 px fly to you, 8 s.                                     |
-| Jetpack | Fly high and safe for 5 s, gears only; 1.2 s invulnerable after landing. |
+First opportunity at 45 m, then a 90 m target interval, subject to safe spacing and active powers. The three powers rotate:
+
+- Firewall: absorbs one crash, then 700 ms protection.
+- RAM ×2: attracts RAM within 200 px and doubles its value for eight seconds.
+- Jetpack: five seconds of flight, safe descent, then one second of protection from touchdown.
+
+Active-time clocks freeze deadlines on pause. Robot following, magnet attraction and flight easing use elapsed time. Resize handling ignores unchanged dimensions; genuine rotation cancels held inputs and attack warnings.
 
 ## Unlocks (`src/storage/unlocks.ts`)
 

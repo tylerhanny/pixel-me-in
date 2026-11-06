@@ -582,6 +582,16 @@ input[type='range'] {
   gap: 1.2rem;
 }
 
+.hud-danger {
+  margin-top: 0.5rem;
+  width: fit-content;
+  padding: 0.35rem 0.6rem;
+  color: #fff0cf;
+  background: #613d40;
+  border-left: 3px solid #efbd7a;
+  font-size: 1rem;
+}
+
 .hud-power {
   display: flex;
   align-items: center;
@@ -2161,4 +2171,44 @@ select {
 .parody-note {
   opacity: 0.75;
   text-align: center;
+}
+
+/* Keep the short-screen thumb controls below the running lane. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .pad-btn {
+    width: 84px;
+  }
+  #pad {
+    padding-bottom: max(12px, var(--safe-b));
+  }
+}
+.hud-stats {
+  padding: 0.35rem 0.55rem;
+  background: #171c2ae6;
+  border-left: 3px solid #dec29a;
+  white-space: nowrap;
+  gap: 0.8rem;
+}
+.hud-power:not(:empty) {
+  padding: 0.4rem 0.6rem;
+  background: #171c2ae6;
+  border: 1px solid #617b86;
+}
+.hud-top {
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.hud-top .pause-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.hud-top [data-skip],
+.hud-top [data-pad-toggle] {
+  order: 2;
+  font-size: 0.85rem;
+}
+@media (max-width: 500px) {
+  .hud-power:not(:empty) {
+    order: 3;
+  }
 }

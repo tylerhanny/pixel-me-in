@@ -39,7 +39,7 @@ Because every face is normalized to the same anchors (`ANCHORS` in `geometry.ts`
 - **Virtual resolution** 640×360, `pixelArt: true`, `Scale.FIT`. Ground at y = 300.
 - **RunScene**: world speed comes from `rules.speedAt(distance)`. Obstacles, gears and power-ups live in pooled Arcade groups and move left at the world speed. Parallax: 3 TileSprite layers.
 - **Spawning**: `rules.pickPattern` (weighted, seeded RNG) + `rules.nextGapPx` (time-based, never < 0.8 s, unit-tested for fairness).
-- **Zones**: every 500 m (`ZONE_LENGTH_M`). The last 90 m of each zone is a robot chase (more obstacles). Zone art is in `src/art/world.ts`.
+- **Zones**: every 180 m (`ZONE_LENGTH_M`). The last 45 m is a robot encounter that waits for road hazards to clear. Zone definitions are in `src/art/world.ts`; workspace painters are in `src/art/workspaces.ts`.
 - **Player**: an invisible physics box (different hitbox for standing / sliding) with a body sprite and the face head following it.
 - **Tutorial**: the first run uses fixed patterns; hitting a tutorial obstacle shows "try again" instead of game over.
 

@@ -4,7 +4,7 @@
  */
 import { bucket, GB_STEPS, METRE_STEPS, track } from '../analytics';
 import { pauseMusic, resumeMusic, setMusicEnabled, stopMusic } from '../audio/music';
-import { setMuted, sfx, unlockAudio } from '../audio/sfx';
+import { setMuted, sfx, suspendAudio, unlockAudio } from '../audio/sfx';
 import { drawBodySheet } from '../art/body';
 import { loadAvatar, type AvatarConfig } from '../face/faceStore';
 import { headPivot, loadFace, renderHead, skinTone, type FaceData } from '../face/renderAvatar';
@@ -21,7 +21,7 @@ import { EVENTS, type ChaseKind, type GameOverData } from '../game/events';
 import { getSettings, setSettings } from '../storage/local';
 import { enterGameMode, isPortrait, isStandalone, isTouch, leaveGameMode } from './device';
 import { playDigitizer } from './digitizer';
-import { $, toast } from './dom';
+import { $ } from './dom';
 import { Hud } from './hud';
 import { attachTouchControls, cancelTouchControls } from './touchControls';
 import { gameOverScreen } from './screens/gameOver';
@@ -122,6 +122,7 @@ export class App {
       this.go('photo');
       return;
     }
+    unlockAudio();
     sfx.click();
     const settings = getSettings();
     setAvatarTextures(
@@ -150,7 +151,6 @@ export class App {
     this.hud.show({ padToggle: tutorial });
     this.detachTouch();
     if (isTouch()) this.detachTouch = attachTouchControls($('#game'), $('#pad'));
-    this.portraitTip();
     startRun({
       seed: (Math.random() * 2 ** 32) >>> 0,
       slowMode: settings.slowMode,
@@ -182,32 +182,24 @@ export class App {
     return q.has('demo') && s > 0 ? s * 1000 : undefined;
   }
 
-  /** Upright phone: one friendly tip (once) – playing upright is fine. */
-  private portraitTip() {
-    if (!isTouch() || !isPortrait() || getSettings().portraitTipShown) return;
-    if (new URLSearchParams(location.search).has('demo')) return;
-    setSettings({ portraitTipShown: true });
-    setTimeout(
-      () => toast('Tip: turn your phone sideways for a bigger view.', undefined, 4000),
-      1500,
-    );
-  }
-
   pause() {
     if (!this.running || this.current === 'pause') return;
     cancelTouchControls();
     pauseRun();
     pauseMusic();
+    suspendAudio();
     this.go('pause');
   }
 
   resume() {
+    unlockAudio();
     this.go(null);
     resumeRun();
     resumeMusic();
   }
 
   quitToMenu() {
+    unlockAudio();
     this.detachTouch();
     stopRun();
     stopMusic();
