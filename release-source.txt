@@ -1,1 +1,1 @@
-9e933a1 — control and collision foundation; visual/gameplay release in progress
+d6c3d2141c45e72f12a4b5d588bf542e91265bd4 - verified authored gameplay; visual release in progress
