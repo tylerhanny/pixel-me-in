@@ -6,7 +6,7 @@ import { track } from '../../analytics';
 import { sfx } from '../../audio/sfx';
 import { FACE_SIZE } from '../../config';
 import { canvasToBlob, canvasToPixels } from '../../face/canvas';
-import { detectFaces, loadDetector } from '../../face/detectFace';
+import { detectFaces } from '../../face/detectFace';
 import {
   DEFAULT_AVATAR,
   deleteBaseFace,
@@ -67,6 +67,7 @@ export const photoScreen: Screen = (app, root) => {
             <input type="file" accept="image/*" hidden />
           </label>
           ${isTouch() ? '' : '<div class="dropzone">…or drop a photo here</div>'}
+          <button class="btn btn-big" data-action="quickplay">Quick play · preset runner</button>
           <button class="btn btn-ghost" data-action="presets">No photo – pick a character</button>
           ${app.avatar ? '<button class="btn btn-ghost" data-action="back">Back</button>' : '<button class="btn btn-ghost" data-action="exit">Exit</button>'}
         </div>
@@ -98,8 +99,6 @@ export const photoScreen: Screen = (app, root) => {
         if (f) void useFile(f);
       });
     }
-    // Start downloading the face finder now, while the player picks a photo.
-    void loadDetector().catch(() => {});
   }
 
   async function useFile(file: File) {
@@ -364,12 +363,13 @@ export const photoScreen: Screen = (app, root) => {
     });
   }
 
-  async function pickPreset(i: number) {
+  async function pickPreset(i: number, play = false) {
     await deleteBaseFace();
     await saveAvatar({ ...base(), source: 'preset', presetId: i });
     track('preset_picked');
     await app.refreshAvatar();
-    app.go('editor');
+    if (play) await app.play();
+    else app.go('editor');
   }
 
   onActions(root, {
@@ -378,6 +378,7 @@ export const photoScreen: Screen = (app, root) => {
     cancel: () => choose(),
     retry: () => choose(),
     presets,
+    quickplay: () => void pickPreset(2, true),
     preset: (el) => void pickPreset(Number(el.dataset.i)),
     use: () => void useCrop(),
     back: () => app.go('editor'),

@@ -8,6 +8,9 @@ export class DebugOverlay {
   private text: Phaser.GameObjects.Text;
 
   constructor(private scene: Phaser.Scene) {
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      delete scene.game.canvas.dataset.debug;
+    });
     scene.physics.world.drawDebug = true;
     if (!scene.physics.world.debugGraphic) scene.physics.world.createDebugGraphic();
     this.text = scene.add
@@ -22,6 +25,8 @@ export class DebugOverlay {
   }
 
   update(info: Record<string, string | number | null>) {
+    // Read-only diagnostics also make real-input browser regressions observable.
+    this.scene.game.canvas.dataset.debug = JSON.stringify(info);
     const fps = this.scene.game.loop.actualFps.toFixed(0);
     const lines = [
       `fps ${fps}`,

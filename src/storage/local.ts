@@ -10,7 +10,7 @@ export interface Settings {
   slowMode: boolean;
   vibration: boolean;
   tutorialDone: boolean;
-  /** On-screen Jump/Slide buttons: auto = upright phones only. Default: never (gestures). */
+  /** On-screen Jump/Slide buttons: auto = upright phones only. Default: always. */
   touchButtons: 'auto' | 'always' | 'never';
   /** The player picked a Touch buttons option themselves (else the default applies). */
   touchButtonsChosen: boolean;
@@ -54,14 +54,13 @@ export function getSettings(): Settings {
     slowMode: false,
     vibration: true,
     tutorialDone: false,
-    touchButtons: 'never',
+    touchButtons: 'always',
     touchButtonsChosen: false,
     portraitTipShown: false,
-    stats: true,
+    stats: false,
   });
-  // Touch gestures are the default (owner, 2026-11-04). Saves from before this
-  // stored 'auto' without the player choosing it, so only a real choice counts.
-  if (!s.touchButtonsChosen) s.touchButtons = 'never';
+  // Preserve explicit choices; give fresh players dependable on-press controls.
+  if (!s.touchButtonsChosen) s.touchButtons = 'always';
   return s;
 }
 

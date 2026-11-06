@@ -54,7 +54,7 @@ interface Layers {
   ground: Phaser.GameObjects.TileSprite;
 }
 
-const HIGH_BOTTOM = GROUND_Y - 60;
+const HIGH_BOTTOM = GROUND_Y - 48;
 /** Tutorial: how slow time gets while waiting for the player to act. */
 const SLOW_MO = 0.25;
 const POWER_NAMES: Record<PowerId, string> = {
@@ -80,6 +80,10 @@ export class RunScene extends Phaser.Scene {
   private debug?: DebugOverlay;
   private view!: View;
 
+  private runNow = 0;
+  private jumps = 0;
+  private doubles = 0;
+  private frameMs = 0;
   private distancePx = 0;
   private speed = 0;
   private gearCount = 0;
@@ -132,6 +136,15 @@ export class RunScene extends Phaser.Scene {
 
   create(cfg: RunConfig) {
     this.cfg = cfg;
+    this.runNow = 0;
+    this.jumps = 0;
+    this.doubles = 0;
+    this.lastHudAt = 0;
+    this.stompAt = 0;
+    this.dustAt = 0;
+    this.lineAt = 0;
+    this.padState = { a: false, b: false, start: false };
+    this.physics.world.resume();
     this.rng = makeRng(cfg.seed);
     this.distancePx = (cfg.startAt ?? 0) * PX_PER_METRE;
     this.speed = 0;
@@ -177,10 +190,15 @@ export class RunScene extends Phaser.Scene {
 
     const px = playerX(this.view);
     this.shadow = this.add.image(px, GROUND_Y + 1, 'shadow').setDepth(4);
-    this.player = new Player(this, px, {
-      jump: (double) => this.onPlayerJump(double),
-      land: (impact) => this.onPlayerLand(impact),
-    });
+    this.player = new Player(
+      this,
+      px,
+      {
+        jump: (double) => this.onPlayerJump(double),
+        land: (impact) => this.onPlayerLand(impact),
+      },
+      cfg.reducedMotion,
+    );
     this.physics.add.collider(this.player.box, groundBody);
 
     const groupCfg = { allowGravity: false, immovable: true };
@@ -209,12 +227,22 @@ export class RunScene extends Phaser.Scene {
     this.debug = cfg.debug ? new DebugOverlay(this) : undefined;
 
     this.applyView();
-    const onResize = () => this.applyView();
+    const onResize = () => {
+      this.player.cancelInput();
+      this.applyView();
+      this.clearAttacks();
+      this.nextAttackAt = this.runNow + 1500;
+      this.player.box.x = playerX(this.view);
+      this.player.body.updateFromGameObject();
+    };
     this.scale.on('resize', onResize);
     const onInput = (i: GameInput) => this.touchInput(i);
     this.game.events.on(EVENTS.input, onInput);
 
+    this.events.on(Phaser.Scenes.Events.PAUSE, this.player.cancelInput, this.player);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.events.off(Phaser.Scenes.Events.PAUSE, this.player.cancelInput, this.player);
+      this.input.removeAllListeners();
       this.input.keyboard?.removeAllListeners();
       this.scale.off('resize', onResize);
       this.game.events.off(EVENTS.input, onInput);
@@ -234,7 +262,7 @@ export class RunScene extends Phaser.Scene {
       sfx.go();
       this.player.frozen = false;
       this.started = true;
-      if (this.cfg.autopilotMs) this.autopilotUntil = this.time.now + this.cfg.autopilotMs;
+      if (this.cfg.autopilotMs) this.autopilotUntil = this.runNow + this.cfg.autopilotMs;
       playZoneMusic(0);
       this.emit(EVENTS.zone, { index: 0, name: ZONES[0].name });
     });
@@ -271,6 +299,11 @@ export class RunScene extends Phaser.Scene {
 
   /** Input from touch gestures or on-screen buttons. */
   private touchInput(i: GameInput) {
+    if (i === 'cancel') {
+      this.player.cancelInput();
+      return;
+    }
+    if (!this.scene.isActive()) return;
     switch (i) {
       case 'jumpTap':
         this.doJump();
@@ -363,18 +396,20 @@ export class RunScene extends Phaser.Scene {
 
   private doJump() {
     if (this.over) return;
-    this.player.pressJump(this.time.now);
+    this.player.pressJump(this.runNow);
   }
 
   private doSlide() {
     if (this.over) return;
-    if (this.player.slide(this.time.now)) {
+    if (this.player.slide(this.runNow)) {
       sfx.slide();
       this.lessonAction('slide');
     }
   }
 
   private onPlayerJump(double: boolean) {
+    this.jumps++;
+    if (double) this.doubles++;
     if (double) {
       sfx.doubleJump();
       if (!this.cfg.reducedMotion)
@@ -395,8 +430,11 @@ export class RunScene extends Phaser.Scene {
 
   // ---------------------------------------------------------------- loop
 
-  update(time: number, deltaMs: number) {
-    const dt = (Math.min(deltaMs, 50) / 1000) * this.slow;
+  update(_time: number, deltaMs: number) {
+    this.frameMs = Math.min(deltaMs, 50) * this.slow;
+    this.runNow += this.frameMs;
+    const time = this.runNow;
+    const dt = this.frameMs / 1000;
     const m = metres(this.distancePx, PX_PER_METRE);
     if (!this.started) this.speed = 0;
     else if (this.over) this.speed = Math.max(0, this.speed - 900 * dt);
@@ -445,11 +483,20 @@ export class RunScene extends Phaser.Scene {
     }
     this.pollGamepad();
 
-    this.player.update(time, this.distancePx);
+    this.player.update(time, this.distancePx, this.frameMs);
     this.updateAttachments(time);
 
     if (time - this.lastHudAt > 100) this.emitHud();
     this.debug?.update({
+      clock: this.runNow,
+      jumps: this.jumps,
+      doubles: this.doubles,
+      y: this.player.box.y,
+      vy: this.player.body.velocity.y,
+      sliding: Number(this.player.isSliding),
+      grounded: Number(this.player.onGround),
+      danger: Math.max(0, this.dangerUntil - this.runNow),
+      laser: this.laser ? Math.max(0, this.laser.fireAt - this.runNow) : null,
       speed: this.speed,
       metres: m,
       zone: ZONES[this.zoneIdx % ZONES.length].id,
@@ -602,8 +649,12 @@ export class RunScene extends Phaser.Scene {
 
   private revive(s: ArcadeSprite, x: number, y: number, key: string) {
     s.setTexture(key);
+    this.tweens.killTweensOf(s);
+    s.setAngle(0).setAlpha(1).setScale(1).setOrigin(0.5);
     s.enableBody(true, x, y, true, true);
-    s.setAngle(0).setAlpha(1).setScale(1);
+    const body = s.body as Phaser.Physics.Arcade.Body;
+    body.setSize(s.width, s.height, true).setVelocity(0, 0);
+    body.updateFromGameObject();
     s.setData('lesson', null);
     s.setData('ap', false); // pooled sprites: forget the old autopilot jump
     this.tweens.killTweensOf(s);
@@ -618,7 +669,8 @@ export class RunScene extends Phaser.Scene {
     s.setDepth(5);
     const body = s.body as Phaser.Physics.Arcade.Body;
     // Forgiving hitbox: 80% wide, a bit shorter.
-    body.setSize(tex.width * 0.8, h * (high ? 0.7 : 0.85), true);
+    body.setSize(tex.width * 0.8, h * (high ? 0.9 : 0.85), true);
+    body.updateFromGameObject();
     s.setData('hint', hint);
     this.animateObstacle(s, key);
     return s;
@@ -654,14 +706,15 @@ export class RunScene extends Phaser.Scene {
     const g = this.gears.get(x, y, kind) as ArcadeSprite;
     this.revive(g, x, y, kind);
     g.setDepth(6).setData('ram', kind);
-    this.tweens.add({
-      targets: g,
-      scaleX: { from: 1, to: 0.2 },
-      duration: 450,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.inOut',
-    });
+    if (!this.cfg.reducedMotion)
+      this.tweens.add({
+        targets: g,
+        scaleX: { from: 1, to: 0.2 },
+        duration: 450,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.inOut',
+      });
     if (kind === 'ramRgb' && !this.cfg.reducedMotion)
       this.tweens.add({ targets: g, y: y - 4, duration: 300, yoyo: true, repeat: -1 });
     return g;
@@ -672,7 +725,8 @@ export class RunScene extends Phaser.Scene {
     const s = this.powers.get(x, y, id) as ArcadeSprite;
     this.revive(s, x, y, id);
     s.setData('power', id).setDepth(6);
-    this.tweens.add({ targets: s, y: '-=8', duration: 400, yoyo: true, repeat: -1 });
+    if (!this.cfg.reducedMotion)
+      this.tweens.add({ targets: s, y: '-=8', duration: 400, yoyo: true, repeat: -1 });
     if (!this.cfg.reducedMotion) {
       this.tweens.add({
         targets: s,
@@ -688,12 +742,12 @@ export class RunScene extends Phaser.Scene {
   // ---------------------------------------------------------------- collisions
 
   private hitObstacle(o: ArcadeSprite) {
-    if (this.over || !o.active || this.player.flying || this.time.now < this.invulnUntil) return;
+    if (this.over || !o.active || this.player.flying || this.runNow < this.invulnUntil) return;
 
     // During the tutorial, a mistake is a lesson, not a game over.
     if (o.getData('hint')) {
       o.disableBody(true, true);
-      this.invulnUntil = this.time.now + 800;
+      this.invulnUntil = this.runNow + 800;
       this.endLesson(false);
       this.emit(EVENTS.hint, 'again');
       return;
@@ -706,15 +760,15 @@ export class RunScene extends Phaser.Scene {
 
   /** Something hit the player (obstacle, bomb or laser). */
   private crash(x: number, y: number) {
-    if (this.over || this.time.now < this.invulnUntil) return;
+    if (this.over || this.runNow < this.invulnUntil) return;
     if (this.power === 'shield') {
       this.power = null;
-      this.invulnUntil = this.time.now + 700;
+      this.invulnUntil = this.runNow + 700;
       sfx.shieldBreak();
       this.burst(x, y, 0x78dcff);
       return;
     }
-    const outcome = crashOutcome(this.time.now, this.dangerUntil);
+    const outcome = crashOutcome(this.runNow, this.dangerUntil);
     if (outcome === 'stumble') {
       this.stumble();
       this.loseRam();
@@ -730,7 +784,7 @@ export class RunScene extends Phaser.Scene {
   }
 
   private stumble() {
-    const now = this.time.now;
+    const now = this.runNow;
     sfx.stumble();
     if (this.cfg.vibration) navigator.vibrate?.(80);
     if (!this.cfg.reducedMotion) this.cameras.main.shake(140, 0.006);
@@ -740,7 +794,7 @@ export class RunScene extends Phaser.Scene {
     this.dangerUntil = now + DANGER_MS;
     this.emit(EVENTS.chase, 'close');
     this.time.delayedCall(DANGER_MS, () => {
-      if (!this.over && this.time.now >= this.dangerUntil)
+      if (!this.over && this.runNow >= this.dangerUntil)
         this.emit(EVENTS.chase, this.chasing ? 'rush' : null);
     });
   }
@@ -819,7 +873,7 @@ export class RunScene extends Phaser.Scene {
     sfx.power();
     popText(this, s.x, s.y - 10, POWER_NAMES[id], '#9cf3ff');
     this.power = id;
-    this.powerUntil = this.time.now + POWER_SECONDS[id] * 1000;
+    this.powerUntil = this.runNow + POWER_SECONDS[id] * 1000;
     if (id === 'jetpack') this.player.setFlying(true);
     this.lessonAction('power');
   }
@@ -833,8 +887,9 @@ export class RunScene extends Phaser.Scene {
         const dx = head.x - g.x;
         const dy = head.y - 40 - g.y;
         if (dx * dx + dy * dy < 200 * 200) {
-          g.x += dx * 0.12;
-          g.y += dy * 0.12;
+          const follow = 1 - Math.pow(0.88, this.frameMs / (1000 / 60));
+          g.x += dx * follow;
+          g.y += dy * follow;
         }
       }
     }
@@ -942,7 +997,7 @@ export class RunScene extends Phaser.Scene {
     const v = this.view;
     // Where the robot wants to be: right behind you (danger), at the left edge (rush), or gone.
     const target = danger ? this.player.box.x - 78 : chase ? v.left + 60 : v.left - 200;
-    this.robot.x += (target - this.robot.x) * 0.06;
+    this.robot.x += (target - this.robot.x) * (1 - Math.pow(0.94, this.frameMs / (1000 / 60)));
     this.robot.setVisible(this.robot.x > v.left - 120);
 
     if (this.robot.visible) {
@@ -984,7 +1039,8 @@ export class RunScene extends Phaser.Scene {
     warn.fillStyle(0xff5a5a, 1);
     warn.fillRect(v.left + v.width - 26, y - 22, 6, 12);
     warn.fillRect(v.left + v.width - 26, y - 7, 6, 4);
-    this.tweens.add({ targets: warn, alpha: 0.25, duration: 120, yoyo: true, repeat: -1 });
+    if (!this.cfg.reducedMotion)
+      this.tweens.add({ targets: warn, alpha: 0.25, duration: 120, yoyo: true, repeat: -1 });
     sfx.warn();
     this.emit(EVENTS.hint, 'laser');
     this.laser = {
@@ -999,29 +1055,36 @@ export class RunScene extends Phaser.Scene {
     this.robotPose = 'throw';
     this.robotPoseUntil = time + 350;
     sfx.throwBomb();
-    const mark = this.add.image(this.player.box.x + 330, GROUND_Y + 1, 'mark').setDepth(4);
-    this.tweens.add({
-      targets: mark,
-      scale: { from: 1.3, to: 0.9 },
-      duration: 220,
-      yoyo: true,
-      repeat: -1,
-    });
+    const mark = this.add
+      .image(
+        Math.min(this.view.width - 38, this.player.box.x + this.speed * 0.85 + 38),
+        GROUND_Y + 1,
+        'mark',
+      )
+      .setDepth(4);
+    if (!this.cfg.reducedMotion)
+      this.tweens.add({
+        targets: mark,
+        scale: { from: 1.3, to: 0.9 },
+        duration: 220,
+        yoyo: true,
+        repeat: -1,
+      });
     // The bomb flies in an arc from the robot's hand to the mark. Its position is
     // set every frame from the mark's live x (the mark scrolls with the world).
     const from = { x: this.robot.x + 20, y: GROUND_Y - 80 };
     const bomb = this.add.image(from.x, from.y, 'bomb').setDepth(23);
-    this.tweens.add({ targets: bomb, angle: 540, duration: BOMB_FLIGHT_MS });
+    if (!this.cfg.reducedMotion)
+      this.tweens.add({ targets: bomb, angle: 540, duration: BOMB_FLIGHT_MS });
     this.marks.push({ mark, bomb, from, thrownAt: time });
     this.emit(EVENTS.hint, 'bomb');
   }
 
   private updateAttacks(time: number) {
-    const dt = this.game.loop.delta / 1000;
     // marks scroll with the world, then turn into a bomb on the ground
     const bombH = this.textures.get('bomb').getSourceImage().height;
     this.marks = this.marks.filter(({ mark, bomb, from, thrownAt }) => {
-      mark.x -= this.speed * dt * this.slow;
+      // Target stays on screen during flight; the landed bomb joins the road.
       // Lands exactly where the ground bomb will sit (on the mark).
       const p = (time - thrownAt) / BOMB_FLIGHT_MS;
       const at = bombArc(p, from, { x: mark.x, y: GROUND_Y - bombH / 2 }, 110);
@@ -1030,13 +1093,14 @@ export class RunScene extends Phaser.Scene {
       bomb.destroy();
       const b = this.addObstacle('bomb', mark.x, false, null);
       b.setData('ap', mark.getData('ap'));
-      this.tweens.add({
-        targets: b,
-        scale: { from: 1.15, to: 1 },
-        duration: 160,
-        yoyo: true,
-        repeat: -1,
-      });
+      if (!this.cfg.reducedMotion)
+        this.tweens.add({
+          targets: b,
+          scale: { from: 1.15, to: 1 },
+          duration: 160,
+          yoyo: true,
+          repeat: -1,
+        });
       sfx.land();
       mark.destroy();
       return false;
@@ -1107,7 +1171,7 @@ export class RunScene extends Phaser.Scene {
     this.clearAttacks();
     this.robot.setFrame('zapped');
     this.robotPose = 'zapped';
-    this.robotPoseUntil = this.time.now + 400;
+    this.robotPoseUntil = this.runNow + 400;
     const beam = this.add
       .rectangle(this.robot.x, GROUND_Y, 40, 400, 0x9cf3ff, 0.8)
       .setOrigin(0.5, 1)
@@ -1204,10 +1268,10 @@ export class RunScene extends Phaser.Scene {
   // ---------------------------------------------------------------- HUD
 
   private emitHud(force = false) {
-    this.lastHudAt = this.time.now;
+    this.lastHudAt = this.runNow;
     const left =
       this.power && this.power !== 'shield'
-        ? Math.max(0, (this.powerUntil - this.time.now) / (POWER_SECONDS[this.power] * 1000))
+        ? Math.max(0, (this.powerUntil - this.runNow) / (POWER_SECONDS[this.power] * 1000))
         : 1;
     this.emit(EVENTS.hud, {
       metres: metres(this.distancePx, PX_PER_METRE),

@@ -43,6 +43,8 @@ const queue: [StatEvent, Props | undefined][] = [];
 
 /** May stats be sent right now? */
 export function statsAllowed(): boolean {
+  // Forks must opt in at build time, including the independent Vercel injection.
+  if (import.meta.env.VITE_ENABLE_ANALYTICS !== 'true') return false;
   if (!import.meta.env.PROD) return false;
   if (navigator.webdriver) return false;
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };

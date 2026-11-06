@@ -33,10 +33,18 @@ function cspPlugin(): Plugin {
     name: 'inject-csp',
     apply: 'build',
     transformIndexHtml(html) {
+      // A fork must not claim the original game's canonical identity.
+      html = html
+        .replace(/\s*<link rel="canonical"[^>]*>/g, '')
+        .replace(/\s*<meta property="og:url"[^>]*>/g, '')
+        .replace(/https:\/\/play\.madhavkwatra\.in\//g, './');
       return html.replace(
         '<meta charset="UTF-8" />',
         `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`,
       );
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: 'User-agent: *\nDisallow: /\n' });
     },
   };
 }

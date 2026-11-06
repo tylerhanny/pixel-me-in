@@ -90,7 +90,7 @@ test('camera: snap a photo with the fake camera', async ({ page }) => {
   expect(net.errors).toEqual([]);
 });
 
-test('phone held upright: full-screen run, tap to jump, swipe down to slide', async ({
+test('phone held upright: full-screen run with default buttons', async ({
   page,
   isMobile,
 }) => {
@@ -106,7 +106,7 @@ test('phone held upright: full-screen run, tap to jump, swipe down to slide', as
   await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(page.locator('#hud')).toBeVisible({ timeout: 10_000 });
   // Phones play with gestures by default (no Jump/Slide buttons); the canvas fills the screen.
-  await expect(page.getByRole('button', { name: 'Jump' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Jump' })).toBeVisible();
   const canvas = await page.locator('#game canvas').boundingBox();
   const vp = page.viewportSize()!;
   expect(canvas!.height).toBeGreaterThan(vp.height * 0.9);
@@ -133,7 +133,8 @@ test('phone: hide/show the touch buttons in the tutorial and the pause menu', as
   await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(page.locator('#hud')).toBeVisible({ timeout: 10_000 });
   const jump = page.getByRole('button', { name: 'Jump' });
-  await expect(jump).toBeHidden(); // gestures are the default
+  await expect(jump).toBeVisible(); // on-press buttons are the default
+  await page.getByRole('button', { name: 'Hide buttons' }).click();
   // Tutorial chip: show the buttons right away, then hide them again.
   await page.getByRole('button', { name: 'Show buttons' }).click();
   await expect(jump).toBeVisible();

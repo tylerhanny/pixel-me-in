@@ -23,7 +23,7 @@ import { enterGameMode, isPortrait, isStandalone, isTouch, leaveGameMode } from 
 import { playDigitizer } from './digitizer';
 import { $, toast } from './dom';
 import { Hud } from './hud';
-import { attachTouchControls } from './touchControls';
+import { attachTouchControls, cancelTouchControls } from './touchControls';
 import { gameOverScreen } from './screens/gameOver';
 import { editorScreen } from './screens/editor';
 import { howToPlayScreen } from './screens/howToPlay';
@@ -195,6 +195,7 @@ export class App {
 
   pause() {
     if (!this.running || this.current === 'pause') return;
+    cancelTouchControls();
     pauseRun();
     pauseMusic();
     this.go('pause');

@@ -2,6 +2,14 @@
 
 Newest first. What changed, why, and what broke.
 
+## 2026-11-05 – Controls and collision foundation
+
+- Fresh touch players get on-press Jump/Slide buttons; explicit saved choices remain. Pointer cancellation, lost capture, pause and rotation release held inputs. Quick play uses a preset without downloading face models.
+- Runtime inspection confirmed the Desk headset body ended above the standing player. Both slide hazards now overlap standing and clear sliding; pooled texture changes reset body geometry. Actual keyboard collision checks covered headset, drone, mug, cooling unit and crate.
+- Gameplay deadlines now use accumulated active time, so pausing preserves warnings and protection. Bombs land at a visible target before scrolling. Robot following, magnet attraction and jetpack easing use elapsed time.
+- Both analytics integrations require explicit build-time opt-in (`VITE_ENABLE_ANALYTICS=true`); fork builds omit upstream canonical identity. Original attribution remains.
+- Baseline: lint, 56 unit tests, build and 13 browser tests passed (3 device-specific skips). Added real-input browser coverage for quick play, jumps, fast fall, swipe, cancellation and pause. Gameplay captures remain local review artifacts.
+
 ## 2026-11-04 – Offline Photo Booth on install
 
 - Owner: the installed app should work fully offline, Photo Booth included. New `src/face/offline.ts` puts the exact MediaPipe files this device needs (SIMD or not, via `FilesetResolver`) into the service worker's `mediapipe` cache: automatically on `appinstalled`, when the installed app opens online without them (iPhone, earlier installs), and from Settings → Offline → "Download (17 MB)". Skipped when the phone's data saver is on.

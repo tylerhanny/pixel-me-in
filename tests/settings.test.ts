@@ -14,15 +14,15 @@ globalThis.localStorage = {
 describe('touch buttons setting', () => {
   beforeEach(() => store.clear());
 
-  it('defaults to gestures only (no buttons)', async () => {
+  it('defaults to on-press buttons', async () => {
     const { getSettings } = await import('../src/storage/local');
-    expect(getSettings().touchButtons).toBe('never');
+    expect(getSettings().touchButtons).toBe('always');
   });
 
-  it("old saves with the old default 'auto' switch to gestures", async () => {
+  it("old saves with the old default 'auto' use the new default", async () => {
     const { getSettings } = await import('../src/storage/local');
     store.set('pmi:settings', JSON.stringify({ touchButtons: 'auto', tutorialDone: true }));
-    expect(getSettings().touchButtons).toBe('never');
+    expect(getSettings().touchButtons).toBe('always');
     expect(getSettings().tutorialDone).toBe(true);
   });
 

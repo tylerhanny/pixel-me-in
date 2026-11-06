@@ -11,6 +11,7 @@ export default tseslint.config(
       'public/mediapipe',
       'test-results',
       'playwright-report',
+      '**/.release-local/**',
     ],
   },
   js.configs.recommended,

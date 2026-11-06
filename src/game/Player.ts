@@ -58,6 +58,7 @@ export class Player {
     private scene: Phaser.Scene,
     x: number,
     private events: PlayerEvents,
+    private reducedMotion = false,
   ) {
     this.box = scene.add.rectangle(x, GROUND_Y, OBJ.w, OBJ.h).setOrigin(0.5, 1).setVisible(false);
     scene.physics.add.existing(this.box);
@@ -87,7 +88,7 @@ export class Player {
 
   /** Press jump. It may happen now, or a moment later when we land (jump buffer). */
   pressJump(time: number) {
-    if (this.dead || this.flying || this.frozen) return;
+    if (this.dead || this.flying || this.frozen || this.jumpHeld) return;
     this.jumpHeld = true;
     this.jumpPressedAt = time;
     this.tryJump(time);
@@ -95,7 +96,7 @@ export class Player {
 
   private tryJump(time: number): boolean {
     const coyote = !this.jumpedSinceGround && time - this.groundedAt < COYOTE_MS;
-    if (this.onGround || coyote) {
+    if ((this.onGround && !this.jumpedSinceGround) || coyote) {
       if (this.sliding) this.endSlide(true);
       this.body.setVelocityY(JUMP_V);
       this.canDouble = true;
@@ -145,14 +146,15 @@ export class Player {
     this.slideHeld = false;
   }
 
-  private endSlide(force = false) {
+  private endSlide(force = false, time = 0) {
     if (!this.sliding) return;
-    if (!force && (this.slideHeld || this.scene.time.now < this.slideUntil)) return;
+    if (!force && (this.slideHeld || time < this.slideUntil)) return;
     this.sliding = false;
     this.setHitbox(STAND);
   }
 
   setFlying(on: boolean) {
+    this.cancelInput();
     this.flying = on;
     this.body.setAllowGravity(!on);
     if (on) {
@@ -163,6 +165,7 @@ export class Player {
 
   /** Quick squash/stretch on the head – cartoon physics. */
   private stretch() {
+    if (this.reducedMotion) return;
     this.scene.tweens.killTweensOf(this.head);
     this.head.setScale(0.9, 1.12);
     this.scene.tweens.add({
@@ -175,6 +178,7 @@ export class Player {
   }
 
   private squash(impact: number) {
+    if (this.reducedMotion) return;
     const k = Math.min(1, Math.max(0, impact) / 900);
     this.scene.tweens.killTweensOf(this.head);
     this.head.setScale(1 + 0.14 * k, 1 - 0.14 * k);
@@ -188,7 +192,7 @@ export class Player {
   }
 
   /** Called every frame. `distancePx` drives the run animation so legs match speed. */
-  update(time: number, distancePx: number) {
+  update(time: number, distancePx: number, deltaMs = 1000 / 60) {
     if (this.dead) return;
     const grounded = this.onGround;
 
@@ -217,13 +221,13 @@ export class Player {
       this.body.setGravityY(0);
     }
 
-    if (this.sliding && grounded) this.endSlide();
+    if (this.sliding && grounded) this.endSlide(false, time);
     // Landed from a fast fall while holding slide: start sliding.
     if (!this.sliding && this.slideHeld && grounded && !this.flying) this.slide(time);
 
     if (this.flying) {
       const targetY = 170;
-      this.box.y += (targetY - this.box.y) * 0.08;
+      this.box.y += (targetY - this.box.y) * (1 - Math.pow(0.92, deltaMs / (1000 / 60)));
       this.body.setVelocityY(0);
     }
 
@@ -258,12 +262,19 @@ export class Player {
   stumble(now: number) {
     this.stumbleUntil = now + 300;
     if (this.sliding) this.endSlide(true);
-    this.scene.tweens.add({
-      targets: this.head,
-      angle: { from: -18, to: 0 },
-      duration: 380,
-      ease: 'Back.out',
-    });
+    if (!this.reducedMotion)
+      this.scene.tweens.add({
+        targets: this.head,
+        angle: { from: -18, to: 0 },
+        duration: 380,
+        ease: 'Back.out',
+      });
+  }
+
+  cancelInput() {
+    this.jumpHeld = false;
+    this.slideHeld = false;
+    this.jumpPressedAt = -Infinity;
   }
 
   /** Stop and show the hurt pose (the scene then breaks the character into pixels). */
