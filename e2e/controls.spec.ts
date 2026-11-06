@@ -29,12 +29,19 @@ test('quick play loads no face models; keyboard hop, double jump, fast fall and 
   await page.waitForTimeout(120);
   await page.keyboard.up('Space');
   await expect.poll(async () => (await state(page)).vy, { intervals: [10] }).toBeGreaterThan(-280);
-  await page.waitForTimeout(80); // Separate physical presses across input frames.
+  await expect.poll(async () => (await state(page)).grounded).toBe(1);
+  // A separate two-press sequence; don't put browser round-trip assertions inside it.
+  await page.keyboard.down('Space');
+  await page.waitForTimeout(120);
+  await page.keyboard.up('Space');
+  await page.waitForTimeout(60);
   await page.keyboard.down('Space');
   await expect.poll(async () => (await state(page)).doubles, { intervals: [10] }).toBe(1);
   await page.keyboard.up('Space');
   await page.keyboard.down('ArrowDown');
   await expect.poll(async () => (await state(page)).sliding).toBe(1);
+  await page.waitForTimeout(1200);
+  expect((await state(page)).sliding).toBe(1); // Periodic scale refresh must not release a hold.
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   const clock = (await state(page)).clock;
   await page.waitForTimeout(800);

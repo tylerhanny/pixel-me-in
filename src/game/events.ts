@@ -16,7 +16,16 @@ export const EVENTS = {
 } as const;
 
 export type HintKind =
-  'jump' | 'slide' | 'double' | 'power' | 'nice' | 'again' | 'done' | 'laser' | 'bomb';
+  | 'jump'
+  | 'slide'
+  | 'double'
+  | 'power'
+  | 'nice'
+  | 'again'
+  | 'done'
+  | 'practiceEnd'
+  | 'laser'
+  | 'bomb';
 
 /** Robot state for the HUD: rush at the end of a zone, close behind after a stumble. */
 export type ChaseKind = 'rush' | 'close' | null;

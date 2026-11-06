@@ -8,6 +8,7 @@ import { DebugOverlay } from '../debugOverlay';
 import { dissolve, popText, puff } from '../effects';
 import { EVENTS, type HintKind, type RunConfig } from '../events';
 import { Player } from '../Player';
+import { encounter, pickEncounter, roadSpeed, type EncounterId } from '../encounters';
 import { computeView, playerX, type View } from '../view';
 import { ROBOT_WALK, type RobotFrame } from '../../art/robot';
 import {
@@ -29,8 +30,6 @@ import {
   isBossChase,
   makeRng,
   metres,
-  nextGapPx,
-  pickPattern,
   POWER_PITY_M,
   POWER_SECONDS,
   POWERS,
@@ -39,7 +38,7 @@ import {
   zoneIndexAt,
   type Lesson,
   type LessonAction,
-  type Pattern,
+  powerDue,
   type PowerId,
 } from '../rules';
 
@@ -55,8 +54,6 @@ interface Layers {
 }
 
 const HIGH_BOTTOM = GROUND_Y - 48;
-/** Tutorial: how slow time gets while waiting for the player to act. */
-const SLOW_MO = 0.25;
 const POWER_NAMES: Record<PowerId, string> = {
   shield: 'FIREWALL!',
   magnet: 'DOWNLOAD MORE RAM!',
@@ -83,6 +80,9 @@ export class RunScene extends Phaser.Scene {
   private runNow = 0;
   private jumps = 0;
   private doubles = 0;
+  private lastEncounter: EncounterId | null = null;
+  private powerIndex = 0;
+  private landingSafe = false;
   private frameMs = 0;
   private distancePx = 0;
   private speed = 0;
@@ -125,8 +125,9 @@ export class RunScene extends Phaser.Scene {
   private lessons: Lesson[] = [];
   private lessonIndex = 0;
   private activeLesson: number | null = null;
+  private lessonActed = false;
   private lessonsDone = new Set<number>();
-  private slow = 1;
+  private lessonsSucceeded = new Set<number>();
   private lastHint: HintKind | null = null;
   private tutorialFinished = false;
 
@@ -139,6 +140,9 @@ export class RunScene extends Phaser.Scene {
     this.runNow = 0;
     this.jumps = 0;
     this.doubles = 0;
+    this.lastEncounter = null;
+    this.powerIndex = 0;
+    this.landingSafe = false;
     this.lastHudAt = 0;
     this.stompAt = 0;
     this.dustAt = 0;
@@ -149,7 +153,7 @@ export class RunScene extends Phaser.Scene {
     this.distancePx = (cfg.startAt ?? 0) * PX_PER_METRE;
     this.speed = 0;
     this.gearCount = 0;
-    this.nextSpawnAt = this.distancePx + 520;
+    this.nextSpawnAt = this.distancePx + 160;
     this.zoneIdx = 0;
     this.chasing = false;
     this.power = null;
@@ -168,8 +172,9 @@ export class RunScene extends Phaser.Scene {
     this.lessons = cfg.tutorial ? [...TUTORIAL] : [];
     this.lessonIndex = 0;
     this.activeLesson = null;
+    this.lessonActed = false;
     this.lessonsDone = new Set();
-    this.slow = 1;
+    this.lessonsSucceeded = new Set();
     this.lastHint = null;
     this.tutorialFinished = !cfg.tutorial;
     this.physics.world.timeScale = 1;
@@ -227,7 +232,13 @@ export class RunScene extends Phaser.Scene {
     this.debug = cfg.debug ? new DebugOverlay(this) : undefined;
 
     this.applyView();
+    let sizeW = this.scale.width;
+    let sizeH = this.scale.height;
     const onResize = () => {
+      // Phaser also emits resize during periodic refreshes with identical dimensions.
+      if (sizeW === this.scale.width && sizeH === this.scale.height) return;
+      sizeW = this.scale.width;
+      sizeH = this.scale.height;
       this.player.cancelInput();
       this.applyView();
       this.clearAttacks();
@@ -299,6 +310,17 @@ export class RunScene extends Phaser.Scene {
 
   /** Input from touch gestures or on-screen buttons. */
   private touchInput(i: GameInput) {
+    if (i === 'skipTutorial') {
+      this.tutorialFinished = true;
+      this.lessonIndex = this.lessons.length;
+      this.activeLesson = null;
+      for (const group of [this.obstacles, this.gears, this.powers])
+        for (const o of group.getChildren() as ArcadeSprite[])
+          if (o.getData('lesson') != null) o.disableBody(true, true);
+      this.nextSpawnAt = this.distancePx + this.speed * 1.5;
+      this.showHint('practiceEnd');
+      return;
+    }
     if (i === 'cancel') {
       this.player.cancelInput();
       return;
@@ -431,7 +453,7 @@ export class RunScene extends Phaser.Scene {
   // ---------------------------------------------------------------- loop
 
   update(_time: number, deltaMs: number) {
-    this.frameMs = Math.min(deltaMs, 50) * this.slow;
+    this.frameMs = Math.min(deltaMs, 50);
     this.runNow += this.frameMs;
     const time = this.runNow;
     const dt = this.frameMs / 1000;
@@ -443,7 +465,8 @@ export class RunScene extends Phaser.Scene {
       // A stumble slows you down for a moment (the robot catches up).
       const trip =
         time < this.stumbleUntil ? 0.6 + 0.4 * (1 - (this.stumbleUntil - time) / 900) : 1;
-      this.speed = speedAt(m, this.cfg.slowMode) * (this.view.portrait ? 0.9 : 1) * trip;
+      this.speed =
+        roadSpeed(speedAt(m), this.view.width, playerX(this.view), this.cfg.slowMode) * trip;
     }
     this.distancePx += this.speed * dt;
 
@@ -470,7 +493,7 @@ export class RunScene extends Phaser.Scene {
       if (this.distancePx >= this.nextSpawnAt) this.spawnNext(m);
       const zi = zoneIndexAt(m);
       if (zi !== this.zoneIdx) this.changeZone(zi);
-      this.updateChase(isBossChase(m), time);
+      this.updateChase(this.tutorialFinished && isBossChase(m), time);
       this.updatePower(time);
       this.updateTutorial();
       this.updateEffects(time);
@@ -503,7 +526,6 @@ export class RunScene extends Phaser.Scene {
       seed: this.cfg.seed,
       objects: this.obstacles.countActive() + this.gears.countActive() + this.powers.countActive(),
       power: this.power,
-      slow: this.slow,
     });
   }
 
@@ -567,20 +589,48 @@ export class RunScene extends Phaser.Scene {
   }
 
   private spawnNext(m: number) {
-    let gapScale = 1;
+    const speed = roadSpeed(
+      speedAt(m + 60),
+      this.view.width,
+      playerX(this.view),
+      this.cfg.slowMode,
+    );
+    let width = 160;
+    let recovery = speed * 1.15;
     if (this.lessonIndex < this.lessons.length) {
       this.spawnLesson(this.lessonIndex);
       this.lessonIndex++;
-      gapScale = 2;
-    } else if (this.power === 'jetpack' || this.chasing) {
-      this.spawnPattern('gearsLine');
+      recovery = speed * 2.2;
+    } else if (
+      this.power === 'jetpack' ||
+      this.landingSafe ||
+      this.runNow < this.invulnUntil ||
+      isBossChase(m)
+    ) {
+      this.spawnRamLine();
+    } else if (powerDue(m, this.lastPowerM, this.power !== null)) {
+      this.addPower(POWERS[this.powerIndex++ % POWERS.length], this.spawnX);
+      this.lastPowerM = m;
     } else {
-      const p = pickPattern(this.rng, m, this.power !== null, this.lastPowerM);
-      if (p === 'power') this.lastPowerM = m;
-      this.spawnPattern(p);
+      const id = pickEncounter(this.rng, m, this.zoneIdx, this.lastEncounter);
+      this.lastEncounter = id;
+      const phrase = encounter(id, speed);
+      width = phrase.width;
+      recovery = phrase.recovery;
+      const z = this.zone();
+      for (const item of phrase.items) {
+        const x = this.spawnX + item.x;
+        if (item.kind === 'ram') this.addGear(x, GROUND_Y - item.height);
+        else
+          this.addObstacle(
+            item.kind === 'high' ? z.high.key : z.low.key,
+            x,
+            item.kind === 'high',
+            null,
+          );
+      }
     }
-    const gap = nextGapPx(this.rng, m, this.chasing, this.cfg.slowMode);
-    this.nextSpawnAt = this.distancePx + gap * gapScale;
+    this.nextSpawnAt = this.distancePx + width + recovery;
   }
 
   private spawnLesson(index: number) {
@@ -606,45 +656,9 @@ export class RunScene extends Phaser.Scene {
     marker.setData('lesson', index);
   }
 
-  private spawnPattern(p: Pattern) {
-    const z = this.zone();
-    const x = this.spawnX;
-    switch (p) {
-      case 'low':
-        this.addObstacle(z.low.key, x, false, null);
-        break;
-      case 'crate':
-        this.addObstacle('crate', x, false, null);
-        break;
-      case 'high':
-        this.addObstacle(z.high.key, x, true, null);
-        break;
-      case 'lowLow':
-        this.addObstacle(z.low.key, x, false, null);
-        this.addObstacle('crate', x + 70, false, null);
-        break;
-      case 'lowGears': {
-        this.addObstacle(z.low.key, x, false, null);
-        for (let i = 0; i < 5; i++) {
-          const t = (i - 2) / 2;
-          this.addGear(x + (i - 2) * 30, GROUND_Y - 70 - 60 * (1 - t * t));
-        }
-        break;
-      }
-      case 'highGears':
-        this.addObstacle(z.high.key, x, true, null);
-        for (let i = 0; i < 4; i++) this.addGear(x - 20 + i * 24, GROUND_Y - 18);
-        break;
-      case 'gearsLine': {
-        const y =
-          this.power === 'jetpack' ? 140 : this.rng() < 0.5 ? GROUND_Y - 20 : GROUND_Y - 120;
-        for (let i = 0; i < 6; i++) this.addGear(x + i * 26, y);
-        break;
-      }
-      case 'power':
-        this.addPower(POWERS[Math.floor(this.rng() * POWERS.length)], x);
-        break;
-    }
+  private spawnRamLine() {
+    const y = this.power === 'jetpack' ? 140 : GROUND_Y - 20;
+    for (let i = 0; i < 6; i++) this.addGear(this.spawnX + i * 26, y);
   }
 
   private revive(s: ArcadeSprite, x: number, y: number, key: string) {
@@ -801,7 +815,6 @@ export class RunScene extends Phaser.Scene {
 
   private gameOver() {
     this.over = true;
-    this.slow = 1;
     this.physics.world.timeScale = 1;
     sfx.hit();
     playGameOverJingle();
@@ -879,6 +892,13 @@ export class RunScene extends Phaser.Scene {
   }
 
   private updatePower(time: number) {
+    if (this.landingSafe) {
+      this.invulnUntil = time + 1000;
+      if (this.player.onGround) {
+        this.landingSafe = false;
+        this.nextSpawnAt = Math.max(this.nextSpawnAt, this.distancePx + this.speed * 1.5);
+      }
+    }
     if (!this.power) return;
     if (this.power === 'magnet') {
       const head = this.player.box;
@@ -896,6 +916,7 @@ export class RunScene extends Phaser.Scene {
     if (time > this.powerUntil) {
       if (this.power === 'jetpack') {
         this.player.setFlying(false);
+        this.landingSafe = true;
         this.invulnUntil = time + 1200;
       }
       this.power = null;
@@ -1015,9 +1036,24 @@ export class RunScene extends Phaser.Scene {
         }
       }
     }
-    if (chase && time > this.nextAttackAt && !this.laser) {
+    const roadClear = !(this.obstacles.getChildren() as ArcadeSprite[]).some(
+      (o) => o.active && o.x > this.player.box.x - 60,
+    );
+    if (
+      chase &&
+      time > this.nextAttackAt &&
+      !this.laser &&
+      !this.marks.length &&
+      roadClear &&
+      !this.player.flying
+    ) {
       this.nextAttackAt = time + RUSH_ATTACK_EVERY_MS * (this.cfg.slowMode ? 1.25 : 1);
-      const a = pickAttack(this.rng, this.lastAttack);
+      const a =
+        this.lastAttack === null
+          ? 'laser'
+          : this.lastAttack === 'laser'
+            ? 'bomb'
+            : pickAttack(this.rng, this.lastAttack);
       this.lastAttack = a;
       if (a === 'laser') this.startLaser(time);
       else this.throwBomb(time);
@@ -1205,7 +1241,7 @@ export class RunScene extends Phaser.Scene {
         .flatMap((g) => g.getChildren() as ArcadeSprite[])
         .find((o) => o.active && o.getData('lesson') === this.activeLesson);
       if (!marker || marker.x < this.player.box.x - 30) {
-        this.endLesson(false);
+        this.endLesson(this.lessonActed);
         this.showHint(null);
       }
     }
@@ -1226,13 +1262,15 @@ export class RunScene extends Phaser.Scene {
       !this.tutorialFinished
     ) {
       this.tutorialFinished = true;
-      this.time.delayedCall(900, () => this.showHint('done'));
+      this.time.delayedCall(900, () =>
+        this.showHint(this.lessonsSucceeded.size === this.lessons.length ? 'done' : 'practiceEnd'),
+      );
     }
   }
 
   private startLesson(index: number) {
     this.activeLesson = index;
-    this.setSlow(SLOW_MO);
+    this.lessonActed = false;
     this.showHint(this.lessons[index].action);
   }
 
@@ -1240,24 +1278,21 @@ export class RunScene extends Phaser.Scene {
     if (this.activeLesson === null) return;
     const lesson = this.lessons[this.activeLesson];
     // Jumping also counts for the power-up lesson (you jump to grab it).
-    if (lesson.action === action) this.endLesson(true);
+    if (lesson.action === action) {
+      this.lessonActed = true;
+      if (action === 'power') this.endLesson(true);
+    }
   }
 
   private endLesson(success: boolean) {
     if (this.activeLesson === null) return;
     this.lessonsDone.add(this.activeLesson);
+    if (success) this.lessonsSucceeded.add(this.activeLesson);
     this.activeLesson = null;
-    this.setSlow(1);
     if (success) {
       this.showHint('nice');
       this.time.delayedCall(700, () => this.lastHint === 'nice' && this.showHint(null));
     }
-  }
-
-  private setSlow(k: number) {
-    this.slow = k;
-    this.physics.world.timeScale = 1 / k; // Arcade: higher = slower
-    this.tweens.timeScale = k;
   }
 
   private showHint(h: HintKind | null) {

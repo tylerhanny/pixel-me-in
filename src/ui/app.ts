@@ -227,7 +227,7 @@ export class App {
     onGame(EVENTS.toast, (text: string) => this.hud.toast(text));
     onGame(EVENTS.hint, (h: Parameters<Hud['hint']>[0]) => {
       this.hud.hint(h);
-      if (h === 'done') {
+      if (h === 'done' || h === 'practiceEnd') {
         setSettings({ tutorialDone: true });
         track('tutorial_done');
       }

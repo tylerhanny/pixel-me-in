@@ -5,7 +5,8 @@
  * - swipe down (and hold) = slide; in the air it drops you fast
  * A jump from a gesture is always a full jump (no "let go early" short hop).
  */
-export type GameInput = 'jumpTap' | 'jumpDown' | 'jumpUp' | 'slideDown' | 'slideUp' | 'cancel';
+export type GameInput =
+  'jumpTap' | 'jumpDown' | 'jumpUp' | 'slideDown' | 'slideUp' | 'cancel' | 'skipTutorial';
 
 /** Finger travel (CSS px) that counts as a swipe. */
 export const SWIPE_PX = 24;

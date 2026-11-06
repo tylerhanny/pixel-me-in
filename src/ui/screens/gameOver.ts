@@ -2,7 +2,7 @@ import { formatGB } from '../../game/rules';
 import { FACE_ACCESSORIES, HATS } from '../../face/accessories';
 import { OUTFIT_LABELS } from '../../art/body';
 import type { GameOverData } from '../../game/events';
-import { getStats, recordRun } from '../../storage/local';
+import { getSettings, getStats, recordRun } from '../../storage/local';
 import { isUnlocked, UNLOCK_RULES } from '../../storage/unlocks';
 import { FEEDBACK_URL } from '../../creator';
 import type { Screen } from '../app';
@@ -20,7 +20,9 @@ const NAMES: Record<string, string> = {
 export const gameOverScreen: Screen = (app, root, arg) => {
   const d = arg as GameOverData;
   const before = getStats();
-  const { stats, newBest } = recordRun(d.metres, d.gears);
+  const slow = getSettings().slowMode;
+  const { stats, newBest } = recordRun(d.metres, d.gears, slow);
+  const best = (slow ? stats.releaseBestSlow : stats.releaseBest) ?? 0;
   const friend = Number(sessionStorage.getItem('pmi:beat')) || 0;
   const unlocked = Object.keys(UNLOCK_RULES).filter(
     (id) => !isUnlocked(id, before) && isUnlocked(id, stats),
@@ -31,7 +33,8 @@ export const gameOverScreen: Screen = (app, root, arg) => {
     `<div class="panel center">
       <h2>Utilized!</h2>
       <p style="font-size:1.6rem;margin:0.2rem 0"><strong>${formatNumber(d.metres)} m</strong></p>
-      <p>${newBest ? '🏆 New best!' : `Best: ${formatNumber(stats.best)} m`} · You saved <strong>${formatGB(d.gears)}</strong> of RAM</p>
+      <p>${newBest ? '🏆 New best!' : `Best: ${formatNumber(best)} m`} ${slow ? '(slow mode)' : ''} · You saved <strong>${formatGB(d.gears)}</strong> of RAM</p>
+      <p class="note">Two hits while the robot is close end a run. Slide under raised hazards; jump over ground hazards.</p>
       ${friend ? `<p class="challenge-result">${d.metres > friend ? `🎉 You beat your friend's ${formatNumber(friend)} m!` : `Your friend ran ${formatNumber(friend)} m – ${formatNumber(friend - d.metres + 1)} m to go!`}</p>` : ''}
       ${unlocked.length ? `<p role="status">🔓 Unlocked in the Photo Booth: <strong>${unlocked.map((id) => NAMES[id] ?? id).join(', ')}</strong></p>` : ''}
       <div class="stack">

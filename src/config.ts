@@ -17,4 +17,4 @@ export const HEAD_SIZE = 48;
 export const PX_PER_METRE = 40;
 
 /** A new zone starts every this many metres. */
-export const ZONE_LENGTH_M = 500;
+export const ZONE_LENGTH_M = 180;

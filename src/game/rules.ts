@@ -21,91 +21,33 @@ export const MAX_SPEED = 520;
 
 /** World speed in px/s. Slow mode is an accessibility option. */
 export function speedAt(distance: number, slowMode = false): number {
-  const s = Math.min(MAX_SPEED, START_SPEED + distance * 0.12);
+  const s = Math.min(MAX_SPEED, START_SPEED + distance * 0.28);
   return slowMode ? s * 0.75 : s;
-}
-
-/** 0 at the start, 1 at top speed. */
-export function difficulty(distance: number): number {
-  return Math.min(1, (speedAt(distance) - START_SPEED) / (MAX_SPEED - START_SPEED));
 }
 
 export function zoneIndexAt(distance: number): number {
   return Math.floor(distance / ZONE_LENGTH_M);
 }
 
-export const BOSS_CHASE_M = 90;
+export const BOSS_CHASE_M = 45;
 
 /** The robot chases you during the last stretch of every zone. */
 export function isBossChase(distance: number): boolean {
   return distance % ZONE_LENGTH_M >= ZONE_LENGTH_M - BOSS_CHASE_M;
 }
 
-/**
- * Pixels until the next pattern. Based on time, so it stays fair as speed rises:
- * the player always gets at least ~0.8 s between patterns.
- */
-export function nextGapPx(
-  rng: () => number,
-  distance: number,
-  chase: boolean,
-  slowMode = false,
-): number {
-  const d = difficulty(distance);
-  let seconds = 1.7 - 0.75 * d; // 1.7 s -> 0.95 s
-  seconds *= 0.85 + rng() * 0.45;
-  if (chase) seconds *= 0.8;
-  seconds = Math.max(0.8, seconds);
-  return seconds * speedAt(distance, slowMode);
-}
-
-export type Pattern =
-  'low' | 'crate' | 'high' | 'lowLow' | 'lowGears' | 'highGears' | 'gearsLine' | 'power';
-
-/** The first power-up comes early (and is part of the tutorial)… */
-export const FIRST_POWER_M = 120;
-/** …and after that, never more than this many metres without one. */
-export const POWER_PITY_M = 250;
-const POWER_CHANCE = 0.1;
-
-/**
- * Pick the next pattern. `lastPowerM` is where the last power-up spawned
- * (start a run with FIRST_POWER_M - POWER_PITY_M so the first one lands at FIRST_POWER_M).
- */
-export function pickPattern(
-  rng: () => number,
-  distance: number,
-  powerActive: boolean,
-  lastPowerM = -Infinity,
-): Pattern {
-  if (!powerActive) {
-    if (distance - lastPowerM >= POWER_PITY_M) return 'power';
-    if (distance > FIRST_POWER_M && rng() < POWER_CHANCE) return 'power';
-  }
-  const d = difficulty(distance);
-  const table: [Pattern, number][] = [
-    ['low', 3],
-    ['crate', 2],
-    ['high', 1 + 2 * Math.min(1, distance / 200)],
-    ['lowGears', 2],
-    ['highGears', 1.5 * Math.min(1, distance / 200)],
-    ['gearsLine', 1.5],
-    ['lowLow', 2 * d],
-  ];
-  const total = table.reduce((s, [, w]) => s + w, 0);
-  let roll = rng() * total;
-  for (const [p, w] of table) {
-    roll -= w;
-    if (roll <= 0) return p;
-  }
-  return 'low';
+/** Power-ups follow a predictable, rotating schedule, without replacing active powers. */
+export const FIRST_POWER_M = 45;
+export const POWER_PITY_M = 90;
+export function powerDue(distance: number, last: number, active: boolean): boolean {
+  return !active && distance - last >= POWER_PITY_M;
 }
 
 /** What the player must do in each tutorial lesson. */
 export type LessonAction = 'jump' | 'slide' | 'double' | 'power';
 
 export interface Lesson {
-  pattern: Pattern | 'doubleGears' | 'tutorialPower';
+  pattern: 'low' | 'high' | 'doubleGears' | 'tutorialPower';
   action: LessonAction;
 }
 
@@ -183,8 +125,8 @@ export function crashOutcome(now: number, dangerUntil: number): 'stumble' | 'cau
 }
 
 /** Robot Rush attacks (end of each zone). Warnings are long enough to react. */
-export const RUSH_ATTACK_EVERY_MS = 1800;
-export const LASER_WARN_MS = 800;
+export const RUSH_ATTACK_EVERY_MS = 3300;
+export const LASER_WARN_MS = 1100;
 export const LASER_FIRE_MS = 350;
 export const BOMB_FLIGHT_MS = 900;
 

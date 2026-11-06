@@ -24,6 +24,9 @@ export interface Stats {
   totalGears: number;
   totalDistance: number;
   runs: number;
+  /** Release records are separate; historical best/totals still unlock earned items. */
+  releaseBest?: number;
+  releaseBestSlow?: number;
 }
 
 const prefersReducedMotion = () =>
@@ -76,14 +79,21 @@ export function getStats(): Stats {
 }
 
 /** Record a finished run. Returns the new stats and whether it was a new best. */
-export function recordRun(distance: number, gears: number): { stats: Stats; newBest: boolean } {
+export function recordRun(
+  distance: number,
+  gears: number,
+  slow = false,
+): { stats: Stats; newBest: boolean } {
   const s = getStats();
-  const newBest = distance > s.best;
+  const key = slow ? 'releaseBestSlow' : 'releaseBest';
+  const newBest = distance > (s[key] ?? 0);
   const stats: Stats = {
+    ...s,
     best: Math.max(s.best, distance),
     totalGears: s.totalGears + gears,
     totalDistance: s.totalDistance + distance,
     runs: s.runs + 1,
+    [key]: Math.max(s[key] ?? 0, distance),
   };
   write('pmi:stats', stats);
   return { stats, newBest };

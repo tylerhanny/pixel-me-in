@@ -37,10 +37,11 @@ export const menuScreen: Screen = (app, root) => {
         ${installAvailable() ? '<button class="btn btn-ghost" data-action="install">Install app</button>' : ''}
       </div>
       <dl class="stats">
-        <div><dt>Best</dt><dd>${formatNumber(stats.best)} m</dd></div>
+        <div><dt>Best${getSettings().slowMode ? ' · slow' : ''}</dt><dd>${formatNumber((getSettings().slowMode ? stats.releaseBestSlow : stats.releaseBest) ?? 0)} m</dd></div>
         <div><dt>RAM saved</dt><dd>${formatGB(stats.totalGears)}</dd></div>
         <div><dt>Runs</dt><dd>${stats.runs}</dd></div>
       </dl>
+      ${stats.best && stats.releaseBest === undefined ? `<p class="note center">Legacy best: ${formatNumber(stats.best)} m · earned unlocks kept</p>` : ''}
       ${app.debug ? '<p class="note center">Debug view is on</p>' : ''}
     </div>`,
   );

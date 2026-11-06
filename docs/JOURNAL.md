@@ -2,6 +2,13 @@
 
 Newest first. What changed, why, and what broke.
 
+## 2026-11-05 – Readable encounters and a shorter first journey
+
+- Five seeded road phrases replace origin-only random spawning: vault, duck, two jumps, duck-to-jump, and a safe RAM lane with an optional high trail. Spacing includes the entire phrase plus recovery. A visible-road speed cap reserves 1.05 seconds of approach on portrait and wide screens.
+- Desk and Data Center now alternate every 180 m. Robot warnings arrive in an ordinary short run, teach laser before bomb, wait for existing hazards to clear and leave recovery between attacks. Jetpack protection extends through touchdown.
+- Practice runs at normal speed, is skippable/replayable, and distinguishes a missed lesson from a successful pass. New normal and slow-mode records are separate; historical totals and earned unlocks remain.
+- Rendered testing caught a regression: Phaser periodically emits resize with unchanged dimensions. Rotation cleanup now checks dimensions before releasing inputs or clearing attacks; the browser suite holds Slide beyond that refresh interval.
+
 ## 2026-11-05 – Controls and collision foundation
 
 - Fresh touch players get on-press Jump/Slide buttons; explicit saved choices remain. Pointer cancellation, lost capture, pause and rotation release held inputs. Quick play uses a preset without downloading face models.

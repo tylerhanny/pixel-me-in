@@ -32,5 +32,20 @@ describe('touch buttons setting', () => {
     expect(getSettings().touchButtons).toBe('auto');
     setSettings({ music: false }); // other changes keep it
     expect(getSettings().touchButtons).toBe('auto');
+    setSettings({ touchButtons: 'never' });
+    expect(getSettings().touchButtons).toBe('never');
+  });
+
+  it('preserves earned totals and legacy records while separating new normal/slow bests', async () => {
+    const { recordRun } = await import('../src/storage/local');
+    store.set('pmi:stats', JSON.stringify({ best: 2000, totalGears: 250, totalDistance: 8000, runs: 12 }));
+    const normal = recordRun(180, 20);
+    expect(normal.newBest).toBe(true);
+    expect(normal.stats.best).toBe(2000);
+    expect(normal.stats.releaseBest).toBe(180);
+    const slow = recordRun(250, 10, true);
+    expect(slow.stats.releaseBestSlow).toBe(250);
+    expect(slow.stats.releaseBest).toBe(180);
+    expect(slow.stats.totalGears).toBe(280);
   });
 });

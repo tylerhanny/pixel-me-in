@@ -4,8 +4,7 @@ import {
   isBossChase,
   makeRng,
   MAX_SPEED,
-  nextGapPx,
-  pickPattern,
+  powerDue,
   speedAt,
   START_SPEED,
   zoneIndexAt,
@@ -38,30 +37,19 @@ describe('zones and boss chase', () => {
   });
 });
 
-describe('fairness', () => {
-  it('always leaves at least 0.8 s between patterns', () => {
-    const rng = makeRng(7);
-    for (let d = 0; d < 5000; d += 50) {
-      for (const chase of [false, true]) {
-        expect(nextGapPx(rng, d, chase) / speedAt(d)).toBeGreaterThanOrEqual(0.8 - 1e-9);
-      }
-    }
-  });
-
-  it('never picks a power-up while one is active', () => {
-    const rng = makeRng(3);
-    for (let i = 0; i < 2000; i++) expect(pickPattern(rng, 1000, true)).not.toBe('power');
+describe('power exclusivity', () => {
+  it('never replaces an active power', () => {
+    expect(powerDue(1000, 0, true)).toBe(false);
   });
 });
 
 describe('power-up schedule', () => {
   it('gives the first power-up at FIRST_POWER_M and then at least every POWER_PITY_M', async () => {
     const { FIRST_POWER_M, POWER_PITY_M } = await import('../src/game/rules');
-    const rng = makeRng(11);
     let last = FIRST_POWER_M - POWER_PITY_M;
     const spawns: number[] = [];
     for (let d = 0; d < 3000; d += 8) {
-      if (pickPattern(rng, d, false, last) === 'power') {
+      if (powerDue(d, last, false)) {
         spawns.push(d);
         last = d;
       }

@@ -10,9 +10,9 @@ const CONTROLS: Record<Kind, { label: string; rows: [string, string][] }> = {
   touch: {
     label: 'Touch',
     rows: [
-      ['Jump', 'Tap anywhere (or swipe up). Tap again in the air for a double jump.'],
+      ['Jump', 'Press Jump; hold for height, release for a short hop. Press again in the air to double jump.'],
       ['Slide', 'Swipe down and hold. In the air, this drops you fast.'],
-      ['Buttons', 'Prefer buttons? Pause menu or Settings → Touch buttons.'],
+      ['Buttons', 'Gestures also work: tap or swipe up for a full jump, swipe down to slide. Choose buttons in Pause or Settings.'],
       ['Pause', 'The II button, top right.'],
     ],
   },
@@ -67,7 +67,7 @@ export const howToPlayScreen: Screen = (app, root) => {
           <li><strong>Jetpack</strong> (purple): fly over everything for 5 s.</li>
         </ul>
         <h3>The Utilizer</h3>
-        <p>Every 500 m you are zapped to a new place: Your Desk → Data Center (more places coming). Near the end of each place, The Utilizer attacks: slide under his beam, jump over his cloud drops. If you trip, he runs right behind you and grabs a quarter of your RAM. Trip again while he is close and he gets you.</p>
+        <p>Every 180 m you are zapped to a new place: Your Desk → Data Center. Near the end of each place, The Utilizer attacks: slide under his beam, jump over his cloud drops. If you trip, he runs right behind you and grabs a quarter of your RAM. Trip again while he is close and he gets you.</p>
         <div class="row center">
           <button class="btn" data-action="tutorial">Replay tutorial</button>
           <button class="btn btn-ghost" data-action="back" autofocus>Back</button>

@@ -5,6 +5,8 @@ export default defineConfig({
   testDir: 'e2e',
   timeout: 60_000,
   fullyParallel: false,
+  // WebGL and local face inference share the test machine's GPU/CPU.
+  workers: 1,
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:4190',

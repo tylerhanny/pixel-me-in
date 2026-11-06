@@ -5,6 +5,7 @@
  */
 import type { ChaseKind, HintKind, HudData } from '../game/events';
 import { formatGB } from '../game/rules';
+import { sendInput } from '../game/controller';
 import { hasGamepad, isTouch } from './device';
 import { padVisible, setPadShown } from './touchControls';
 import { formatNumber } from './dom';
@@ -31,6 +32,7 @@ export class Hud {
           <span class="stat"><span class="ram-ico" aria-hidden="true"></span><span data-g>0 GB</span></span>
         </div>
         <div class="hud-power" data-p></div>
+        ${opts.padToggle ? '<button class="pad-toggle" data-skip>Skip practice</button>' : ''}
         ${touch && opts.padToggle ? '<button class="pad-toggle" data-pad-toggle></button>' : ''}
         <button class="pause-btn" aria-label="Pause">
           <span aria-hidden="true">❚❚</span>${touch ? '' : '<small>Esc</small>'}
@@ -43,6 +45,9 @@ export class Hud {
     this.gearsEl = this.root.querySelector('[data-g]')!;
     this.powerEl = this.root.querySelector('[data-p]')!;
     this.root.querySelector('.pause-btn')!.addEventListener('click', () => this.onPause());
+    this.root
+      .querySelector('[data-skip]')
+      ?.addEventListener('click', () => sendInput('skipTutorial'));
     const toggle = this.root.querySelector<HTMLButtonElement>('[data-pad-toggle]');
     if (toggle) {
       const label = () => {
@@ -141,7 +146,10 @@ export class Hud {
     this.root.querySelector('.hint')?.remove();
     this.lastHint = kind;
     // Tutorial over: the buttons chip goes away (Pause menu keeps the option).
-    if (kind === 'done') this.root.querySelector('[data-pad-toggle]')?.remove();
+    if (kind === 'done' || kind === 'practiceEnd') {
+      this.root.querySelector('[data-pad-toggle]')?.remove();
+      this.root.querySelector('[data-skip]')?.remove();
+    }
     // Touch buttons on screen: make the one to press glow.
     document.querySelectorAll('.pad-btn').forEach((b) => b.classList.remove('glow'));
     const glow = kind === 'slide' ? 'slide' : kind === 'jump' || kind === 'double' ? 'jump' : null;
@@ -208,6 +216,8 @@ function hintHtml(kind: HintKind): string {
       return 'Oops! Try the next one.';
     case 'done':
       return "You're ready. Run!";
+    case 'practiceEnd':
+      return 'Practice ended. Replay any time in How to play.';
     case 'laser':
       return '⚠ Utilization beam! <b>Slide</b> under it!';
     case 'bomb':

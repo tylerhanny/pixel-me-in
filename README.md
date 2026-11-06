@@ -15,7 +15,7 @@ _Parody: a fan-made joke game, not linked to or approved by any company or perso
 - 📸 **Camera or upload** – or skip the photo and pick a ready-made character
 - 🧑‍🎨 **On-device pixel filter** – pixel size, colour palettes, outline, or keep the photo look
 - 🎩 **Photo Booth** – hats, masks, glasses, outfits; save or share a picture of your character
-- 🏃 **Zone Run** – endless runner, a new world every 500 m, robot chase before each zap
+- 🏃 **Zone Run** – endless runner, a new world every 180 m, robot chase before each zap
 - ⚡ **Power-ups** – shield, gear magnet, jetpack
 - 📱 **Works everywhere** – keyboard, touch and gamepad; installable app (PWA) that plays offline
 - ♿ **Accessible** – reduce-motion and slow-mode options, screen-reader announcements, keyboard menus
