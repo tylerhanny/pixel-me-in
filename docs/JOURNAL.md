@@ -2,6 +2,12 @@
 
 Newest first. What changed, why, and what broke.
 
+## 2026-11-05 – Data Center readability follow-up
+
+- Existing gameplay captures confirmed that rack fans and lights competed with cooling units, drones and RAM. Lowered scenery contrast and replaced decorative fans with quiet vents; active hazards now share warm safety casings, while RAM has a brighter green board and distinct gold connector notch. Sprite dimensions, collision bodies and encounter balance are unchanged.
+- Removed the redundant close-chase banner and gave danger/zone announcements priority over RAM toasts, fixing overlapping status text on short landscape screens.
+- Retained both mobile input options. Added real-browser tap, double-tap, swipe/hold/release checks with buttons shown and hidden; the focused input suite passes. Reviewed changed art in portrait, landscape and the Desk, including reduced-motion presentation and actual gesture collision outcomes. Earlier release captures and builds remain recoverable.
+
 ## 2026-11-05 – Workspace art, readable danger and sound
 
 - Redrew both environments, current hazards, RAM and power-ups with a shared pixel palette and shaded surfaces. Added hero clothing detail and mechanical robot detail with distinct charge/fire/recovery poses. Reviewed the Desk composition at phone scale before extending it to the Data Center.

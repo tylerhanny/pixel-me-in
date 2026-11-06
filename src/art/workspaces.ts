@@ -179,27 +179,27 @@ export function deskGround(c: Ctx, w: number) {
 export function dataFar(c: Ctx) {
   r(c, '#101e30', 0, 0, 512, 180);
   for (let x = 0; x < 512; x += 128) {
-    r(c, '#263b51', x, 0, 5, 180);
-    r(c, '#40566a', x, 0, 1, 180);
-    panel(c, x + 13, 16, 102, 164, '#1b3044', '#3c5364', '#0d192b');
+    r(c, '#203044', x, 0, 5, 180);
+    r(c, '#2e4357', x, 0, 1, 180);
+    panel(c, x + 13, 16, 102, 164, '#1b3044', '#2c4154', '#0d192b');
     for (let y = 24; y < 172; y += 17) {
-      panel(c, x + 19, y, 88, 14, '#2b4053', '#445a69', '#17283c');
+      panel(c, x + 19, y, 88, 14, '#223448', '#30465a', '#17283c');
       r(c, '#142437', x + 24, y + 5, 48, 4);
-      for (let v = 0; v < 6; v++) r(c, '#344c5e', x + 26 + v * 7, y + 5, 2, 4);
-      r(c, '#72aaa5', x + 88, y + 4, 3, 2);
-      r(c, '#537c8c', x + 94, y + 4, 3, 2);
-      r(c, '#6b7c88', x + 79, y + 8, 18, 1);
+      for (let v = 0; v < 6; v++) r(c, '#2a3d51', x + 26 + v * 7, y + 5, 2, 4);
+      r(c, '#446270', x + 88, y + 4, 3, 2);
+      r(c, '#334c60', x + 94, y + 4, 3, 2);
+      r(c, '#3b5266', x + 79, y + 8, 18, 1);
     }
-    r(c, '#668b9c', x + 49, 7, 27, 3);
+    r(c, '#405f73', x + 49, 7, 27, 3);
   }
 }
 
 export function dataMid(c: Ctx) {
   r(c, '#152a3e', 0, 22, 512, 13);
-  r(c, '#547284', 0, 23, 512, 2);
+  r(c, '#3c5569', 0, 23, 512, 2);
   r(c, '#253e51', 0, 27, 512, 5);
   for (let x = 0; x < 512; x += 64) {
-    r(c, '#7a8e98', x, 22, 3, 13);
+    r(c, '#486174', x, 22, 3, 13);
     r(c, '#112234', x + 3, 22, 2, 13);
   }
   for (const x of [28, 292]) {
@@ -210,25 +210,20 @@ export function dataMid(c: Ctx) {
       [x + 110, 174],
       [x + 92, 174],
     ]);
-    panel(c, x, 49, 96, 125, '#284155', '#6d8591', '#142b40');
+    panel(c, x, 49, 96, 125, '#284155', '#405d70', '#142b40');
     r(c, '#172c40', x + 7, 57, 82, 109);
     for (let y = 62; y < 160; y += 22) {
-      panel(c, x + 11, y, 73, 18, '#3a5365', '#5a7481', '#21384d');
-      for (const dx of [22, 43]) {
-        disc(c, '#13293c', x + dx, y + 9, 6);
-        disc(c, '#426072', x + dx, y + 9, 4);
-        r(c, '#1b3347', x + dx - 4, y + 8, 9, 2);
-        r(c, '#1b3347', x + dx - 1, y + 5, 2, 9);
-      }
-      r(c, '#79c4be', x + 66, y + 5, 3, 3);
-      r(c, '#96a690', x + 73, y + 5, 3, 3);
+      panel(c, x + 11, y, 73, 18, '#2a4054', '#385368', '#21384d');
+      // Quiet rack vents; reserve the circular fan silhouette for the floor hazard.
+      for (let row = 0; row < 3; row++) r(c, '#1c3043', x + 18, y + 5 + row * 3, 42, 1);
+      r(c, '#456677', x + 71, y + 6, 2, 2);
       r(c, '#203648', x + 63, y + 12, 15, 2);
     }
-    r(c, '#96b6bd', x + 4, 57, 1, 108);
-    r(c, '#567d87', x + 88, 57, 1, 108);
+    r(c, '#496a7b', x + 4, 57, 1, 108);
+    r(c, '#375569', x + 88, 57, 1, 108);
   }
   r(c, '#183043', 0, 175, 512, 5);
-  r(c, '#517783', 0, 175, 512, 1);
+  r(c, '#375569', 0, 175, 512, 1);
 }
 
 export function dataGround(c: Ctx, w: number) {
@@ -292,21 +287,21 @@ export function headset(c: Ctx) {
 }
 
 export function coolingUnit(c: Ctx) {
-  panel(c, 0, 1, 34, 33, '#6c8c9a', '#c4e2d8', '#3c576e');
-  r(c, '#eac17a', 3, 4, 28, 4);
+  panel(c, 0, 1, 34, 33, '#d99550', '#fff0c5', '#87503d');
+  r(c, '#f6d58c', 3, 4, 28, 4);
   for (let x = 5; x < 29; x += 8) r(c, ink, x, 4, 3, 4);
   disc(c, ink, 17, 21, 10);
-  disc(c, '#3d5c70', 17, 21, 8);
-  disc(c, '#9db9bc', 17, 21, 3);
+  disc(c, '#333b4a', 17, 21, 8);
+  disc(c, '#fff0c5', 17, 21, 3);
   for (const [x, y, w, h] of [
     [16, 13, 3, 5],
     [20, 20, 5, 3],
     [15, 24, 3, 5],
     [9, 19, 5, 3],
   ])
-    r(c, '#789da9', x, y, w, h);
-  r(c, '#d0e9dc', 3, 12, 2, 2);
-  r(c, '#d0e9dc', 29, 29, 2, 2);
+    r(c, '#c2b6a5', x, y, w, h);
+  r(c, '#fff0c5', 3, 12, 2, 2);
+  r(c, '#fff0c5', 29, 29, 2, 2);
 }
 
 export function drone(c: Ctx) {
@@ -317,25 +312,28 @@ export function drone(c: Ctx) {
   r(c, '#8aaab4', 7, 6, 3, 8);
   r(c, '#8aaab4', 40, 6, 3, 8);
   r(c, ink, 7, 12, 36, 4);
-  panel(c, 13, 9, 24, 18, '#6d91a2', '#c3dad7', '#3f5e76');
+  panel(c, 13, 9, 24, 18, '#d99550', '#fff0c5', '#87503d');
   r(c, ink, 17, 14, 16, 8);
-  r(c, '#eeae66', 20, 16, 10, 3);
+  r(c, '#ff735a', 20, 16, 10, 3);
   r(c, '#fff1c7', 22, 16, 2, 2);
-  r(c, '#a5c2c6', 18, 27, 3, 4);
-  r(c, '#a5c2c6', 30, 27, 3, 4);
+  r(c, '#f6d58c', 18, 27, 3, 4);
+  r(c, '#f6d58c', 30, 27, 3, 4);
   r(c, '#eac17a', 22, 28, 7, 3);
 }
 
 export function ram(c: Ctx, rare = false) {
-  panel(c, 0, 0, 26, 13, rare ? '#464768' : '#3d9477', rare ? '#b5b1e0' : '#a6e4be', '#1b3f43');
+  // A broad luminous board, inset chips and a notched gold connector: unlike rack slots.
+  panel(c, 0, 0, 26, 13, rare ? '#b69be1' : '#80dfa0', '#edffd5', rare ? '#715590' : '#379766');
   for (const x of [4, 11, 18]) {
-    r(c, ink, x, 4, 5, 6);
-    r(c, rare ? '#9687b8' : '#547b75', x + 1, 5, 3, 1);
+    r(c, '#213d3c', x, 5, 4, 4);
+    r(c, rare ? '#e5c8ff' : '#ccf8b9', x, 4, 4, 1);
   }
-  for (let x = 2; x < 25; x += 3) if (x !== 11) r(c, '#f1cd83', x, 13, 2, 3);
+  r(c, '#f1cd83', 2, 12, 22, 2);
+  for (let x = 2; x < 25; x += 3) if (x !== 11) r(c, '#ffe8a3', x, 14, 2, 2);
+  r(c, ink, 11, 12, 3, 4);
   if (rare)
     for (let x = 2; x < 24; x += 4)
-      r(c, ['#edaa86', '#e6d399', '#a3dbcb', '#9fb7de', '#c6a6df'][Math.floor(x / 4)], x, 1, 4, 2);
+      r(c, ['#ffb897', '#ffe5a5', '#bdf5b3', '#aee9fa', '#dfb9ff'][Math.floor(x / 4)], x, 1, 4, 2);
 }
 
 /** Strong, distinct silhouettes inside a common hardware casing. */

@@ -79,6 +79,7 @@ export class Hud {
   update(d: HudData) {
     if (!this.metresEl) return;
     this.dangerEl.hidden = d.dangerLeft <= 0;
+    if (d.dangerLeft > 0) this.root.querySelector('.toast-line')?.remove();
     this.dangerEl.textContent =
       d.dangerLeft > 0 ? `⚠ One more hit ends the run · ${Math.ceil(d.dangerLeft)}s` : '';
     if (d.metres !== this.last.metres) this.metresEl.textContent = formatNumber(d.metres);
@@ -111,8 +112,9 @@ export class Hud {
 
   banner(text: string, zoneIndex: number) {
     const holder = this.root.querySelector('[data-banners]');
-    if (!holder) return;
+    if (!holder || !this.dangerEl.hidden) return;
     holder.querySelector('.banner:not(.chase)')?.remove();
+    holder.querySelector('.toast-line')?.remove();
     const el = document.createElement('div');
     el.className = 'banner';
     el.textContent =
@@ -127,9 +129,16 @@ export class Hud {
     if (!holder) return;
     holder.querySelector('.chase')?.remove();
     if (!kind) return;
+    holder.querySelector('.toast-line')?.remove();
+    // The persistent danger countdown already explains a stumble; don't cover it.
+    if (kind === 'close' || !this.dangerEl.hidden) {
+      this.say('One more hit ends the run. Stay clear until the danger countdown ends.');
+      return;
+    }
+    holder.querySelector('.banner:not(.chase)')?.remove();
     const el = document.createElement('div');
     el.className = 'banner chase';
-    el.textContent = kind === 'rush' ? 'Idle RAM detected!' : "He's right behind you!";
+    el.textContent = 'Idle RAM detected!';
     holder.append(el);
     setTimeout(() => el.remove(), 2400);
     this.say(el.textContent);
@@ -140,6 +149,7 @@ export class Hud {
     const holder = this.root.querySelector('[data-banners]');
     if (!holder) return;
     holder.querySelector('.toast-line')?.remove();
+    if (!this.dangerEl.hidden || holder.querySelector('.banner')) return;
     const el = document.createElement('div');
     el.className = 'toast-line';
     el.textContent = text;

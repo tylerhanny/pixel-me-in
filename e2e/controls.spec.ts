@@ -111,3 +111,40 @@ test('rotation resizes the rendered camera and keeps landscape controls below th
     }
   }
 });
+
+for (const buttons of ['always', 'never']) {
+  test(`tap, double tap and swipe remain usable with buttons ${buttons}`, async ({
+    page,
+    context,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'touch gestures');
+    await play(page);
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.locator('[data-touch-buttons]').selectOption(buttons);
+    await page.getByRole('button', { name: /Resume/ }).click();
+    await expect(page.locator('#pad')).toBeVisible({ visible: buttons === 'always' });
+    const cdp = await context.newCDPSession(page);
+    const touch = async (type: 'touchStart' | 'touchMove' | 'touchEnd', y = 340) =>
+      cdp.send('Input.dispatchTouchEvent', {
+        type,
+        touchPoints: type === 'touchEnd' ? [] : [{ x: 260, y, id: 1 }],
+      });
+    await touch('touchStart');
+    await touch('touchEnd');
+    await page.waitForTimeout(100);
+    await touch('touchStart');
+    await touch('touchEnd');
+    await expect.poll(async () => (await state(page)).jumps).toBe(2);
+    await expect.poll(async () => (await state(page)).doubles).toBe(1);
+    await touch('touchStart');
+    await touch('touchMove', 400);
+    await expect.poll(async () => (await state(page)).sliding).toBe(1);
+    await expect.poll(async () => (await state(page)).grounded).toBe(1);
+    await page.waitForTimeout(400);
+    expect((await state(page)).sliding).toBe(1);
+    await touch('touchEnd');
+    await expect.poll(async () => (await state(page)).sliding).toBe(0);
+    expect((await state(page)).jumps).toBe(2); // A swipe release must not add a tap.
+  });
+}
